@@ -251,7 +251,7 @@ insurance_cost %>%
     min_charges = min(charges),
     max_charges = max(charges)
   )
-plt_age <- ggplot(insurance_cost, aes(x = factor(children), y = charges)) +
+plt_children <- ggplot(insurance_cost, aes(x = factor(children), y = charges)) +
   geom_boxplot() +
   labs(title = "Kostnader per antal barn")
 
@@ -261,24 +261,67 @@ ggplot(insurance_cost, aes(x = children, y = charges)) +
   labs(title = "Kostnader i relation till antal barn")
 
 
+# Kostnader kopplat till chronicla condition
+insurance_cost %>%
+  group_by(chronic_condition) %>%
+  summarise(
+    mean_charges = mean(charges),
+    median_charges = median(charges),
+    sd_charges = sd(charges),
+    min_charges = min(charges),
+    max_charges = max(charges)
+  )
+plt_chronic <- ggplot(insurance_cost, aes(x = factor(chronic_condition), y = charges)) +
+  geom_boxplot() +
+  labs(title = "Kostnader i relation till korniskt tillstånd")
+
+
+
+
+
+
+
+
+
+
+
 compare_var <- function(var) {
   insurance_cost %>%
-    group_by({{var}}) %>%
-    summarise(mean = mean(charges)) %>%
-    summarise(diff = max(mean) - min(mean)) %>%
-    pull(diff)
+    group_by(.data[[var]]) %>%
+    summarise(
+      median = median(charges),
+      mean = mean(charges),
+      .groups = "drop"
+    ) %>%
+    summarise(
+      median_diff = max(median) - min(median),
+      mean_diff = max(mean) - min(mean)
+    )
 }
 
-tibble(
-  variable = c("smoker", "risk_level", "bmi_category", "history_level"),
-  impact = c(
-    compare_var(smoker),
-    compare_var(risk_level),
-    compare_var(bmi_category),
-    compare_var(history_level)
-  )
-)
+cat_vars <- insurance_cost %>%
+  select(where(is.factor)) %>%
+  names()
+
+impact_table <- tibble(variable = cat_vars) %>%
+  rowwise() %>%
+  mutate(
+    median_diff = compare_var(variable)
+  ) %>%
+  ungroup() %>%
+  arrange(desc(median_diff))
+  
+
+impact_table
+
 
 plt_box_rh <- (plt_risk | plt_history)
 
-
+# Histogram delat på rökare vs icke rökare
+ggplot(insurance_cost, aes(x = charges, fill = smoker)) +
+  geom_histogram(bins = 30, alpha = 0.5, position = "identity") +
+  labs(
+    title = "Fördelning av kostnader per rökstatus",
+    x = "Kostnad",
+    y = "Antal"
+  )

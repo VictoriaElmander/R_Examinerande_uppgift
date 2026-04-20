@@ -1,0 +1,108 @@
+---
+title: "Analys av försäkringskostnader"
+format: html
+editor: visual
+---
+
+```{r echo=FALSE, results='hide', message=FALSE, warning=FALSE}
+source("../scripts/01_load_data.R")
+source("../scripts/02_prepare_data.R")
+source("../scripts/03_functions.R")
+source("../scripts/04_models.R")
+```
+
+# 1. Inledning
+
+Syftet med analysen är att undersöka vilka faktorer som är relaterade till försäkringskostnader samt att utvärdera om en regressionsmodell kan användas för att förklara och förutsäga kostnader för framtida kunder.
+
+# 2. Dataförståelse
+
+## 2.1 Översikt av datamängd
+
+Datamängden består av 1100 observationer och 14 variabler och innehåller både numeriska och kategoriska variabler. Den beroende variabeln i analysen är försäkringskostnaden (`charges`).
+
+Flera variabler, såsom `age`, `bmi` och `charges`, är numeriska, medan variabler som `sex`, `smoker` och `chronic_condition` är kategoriska. De kategoriska variablerna är lagrade som teckenvariabler (chr) och behöver därför omvandlas till faktorer för att kunna användas korrekt i vidare analys.
+
+Vid en första genomgång framgår att vissa kategoriska variabler inte är standardiserade, exempelvis genom blandning av små och stora bokstäver. Detta kan påverka analysen och behöver därför åtgärdas.
+
+Det finns även ett begränsat antal saknade värden i datamängden och återfinns i variablerna `bmi` (28 observationer), `exercise_level` (22 observationer) och `annual_checkups` (20 observationer). De saknade värdena behöver hanteras innan analysen, då de annars kan påverka både statistiska sammanfattningar och regressionsmodeller.
+
+```{r}
+glimpse(insurance_cost_raw)
+```
+```{r}
+dim(insurance_cost_raw)
+```
+
+```{r}
+colSums(is.na(insurance_cost_raw))
+```
+# 3. Datastädning och förberedelse
+
+Datamängden förbereddes inför analys genom standardisering av textvariabler, omkodning av kategoriska variabler till faktorer, hantering av saknade värden samt konstruktion av nya variabler för att förbättra tolkbarhet och analysbarhet.
+
+## 3.1 Städning av kategoriska variabler
+
+Onödiga mellanslag i textvariabler avlägsnades och textformat standardiserades, exempelvis genom omvandling till gemener respektive titel-format. Syftet var att undvika att identiska kategorier behandlas som olika värden på grund av inkonsekvent stavning.
+
+Därefter omvandlades relevanta variabler (`sex`, `region`, `smoker`, `chronic_condition`, `exercise_level`, `plan_type`) till faktorer. Detta är nödvändigt för att variablerna ska kunna användas korrekt i vidare statistisk analys och regressionsmodeller.
+
+```{r}
+glimpse(insurance_cost)
+```
+
+## 3.2 Hantering av saknade värden
+
+Saknade värden hanterades beroende på variabeltyp. För den kategoriska variabeln `exercise_level` ersattes saknade värden med en egen kategori (“unknown”) för att behålla observationer i analysen.
+
+För de numeriska variablerna `bmi` och `annual_checkups` ersattes saknade värden med medianen. Medianen valdes då den är robust mot extremvärden och därmed minskar risken för snedvridning i analysen.
+
+```{r}
+colSums(is.na(insurance_cost))
+```
+
+## 3.3 Skapande av nya variabler
+
+Flera nya variabler skapades för att göra analysen mer tolkbar och för att fånga mönster som inte framgår lika tydligt i de ursprungliga variablerna.
+
+En log-transformerad variabel, `log_charges`, skapades eftersom histogram visade att kostnadsvariabeln är snedfördelad. Transformeringen ger en mer symmetrisk fördelning, vilket är fördelaktigt vid regressionsanalys.
+
+Variabeln `bmi_category` skapades genom att dela in BMI i kategorier. Detta motiveras av att BMI visade ett positivt samband med kostnader i både korrelationsanalys och scatterplots, samtidigt som kategorisering underlättar jämförelser mellan grupper.
+
+Variabeln `age_group` skapades för att möjliggöra jämförelser mellan olika åldersgrupper, vilket kan bidra till en mer lättolkad analys jämfört med enbart kontinuerlig variabel.
+
+En sammansatt riskvariabel, `risk_level`, konstruerades utifrån rökstatus och BMI. Detta baseras på den inledande analysen, där BMI visade ett positivt samband med kostnader och där boxplotar visade tydligt högre kostnader för rökare. Kombinationen möjliggör att den samlade effekten av hälsorelaterade riskfaktorer fångas. Variabeln `chronic_condition` inkluderades inte i denna sammanslagning, då dess samband med kostnader bedömdes vara svagare i den inledande analysen, och för att undvika att skapa en alltför komplex variabel.
+
+
+FORTSÄTT HÄR: En sammansatt riskvariabel, risk_level, konstruerades utifrån rökstatus och BMI. I konstruktionen användes en förenklad indelning där BMI över 30 klassificerades som hög risk, vilket motsvarar kategorin “obese”. Detta motiveras av den inledande analysen, där BMI visade ett positivt samband med kostnader, samtidigt som rökare uppvisade tydligt högre kostnader i boxplotar.
+
+Variabeln chronic_condition inkluderades inte, då dess samband med kostnader bedömdes vara svagare jämfört med BMI och rökstatus.
+
+
+
+Slutligen skapades variablerna `history` och `history_level`, där tidigare olyckor och tidigare claims kombinerades. Detta motiveras av att båda variablerna visade positiva samband med kostnader och beskriver relaterade aspekter av individens skadehistorik.
+
+```{r}
+insurance_cost %>% count(bmi_category)
+insurance_cost %>% count(risk_level)
+insurance_cost %>% count(history_level)
+```
+
+
+## 2.1 Översikt av datamängd
+
+## 2.2 Datastädning
+
+## 2.3 Skapande av variabler
+
+# 3. Beskrivande analys
+
+## 3.1 Hur kostnaderna är fördelade
+
+## 3.2 Variabler som verkar intressanta att undersöka vidare
+
+## 3.3 Skillnader mellan grupper
+
+# 4. Sammanfattning av den beskrivande analysen
+
+# 5. Regressionsanalys
