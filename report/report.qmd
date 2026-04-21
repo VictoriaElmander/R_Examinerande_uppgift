@@ -47,6 +47,8 @@ Onödiga mellanslag i textvariabler avlägsnades och textformat standardiserades
 
 Därefter omvandlades relevanta variabler (`sex`, `region`, `smoker`, `chronic_condition`, `exercise_level`, `plan_type`) till faktorer. Detta är nödvändigt för att variablerna ska kunna användas korrekt i vidare statistisk analys och regressionsmodeller.
 
+En kontroll av dubletter, både på radnivå och baserat på customer_id, visade att inga dubbla observationer förekom i datamängden.
+
 ```{r}
 glimpse(insurance_cost)
 ```
@@ -71,38 +73,126 @@ Variabeln `bmi_category` skapades genom att dela in BMI i kategorier. Detta moti
 
 Variabeln `age_group` skapades för att möjliggöra jämförelser mellan olika åldersgrupper, vilket kan bidra till en mer lättolkad analys jämfört med enbart kontinuerlig variabel.
 
-En sammansatt riskvariabel, `risk_level`, konstruerades utifrån rökstatus och BMI. Detta baseras på den inledande analysen, där BMI visade ett positivt samband med kostnader och där boxplotar visade tydligt högre kostnader för rökare. Kombinationen möjliggör att den samlade effekten av hälsorelaterade riskfaktorer fångas. Variabeln `chronic_condition` inkluderades inte i denna sammanslagning, då dess samband med kostnader bedömdes vara svagare i den inledande analysen, och för att undvika att skapa en alltför komplex variabel.
-
-
-FORTSÄTT HÄR: En sammansatt riskvariabel, risk_level, konstruerades utifrån rökstatus och BMI. I konstruktionen användes en förenklad indelning där BMI över 30 klassificerades som hög risk, vilket motsvarar kategorin “obese”. Detta motiveras av den inledande analysen, där BMI visade ett positivt samband med kostnader, samtidigt som rökare uppvisade tydligt högre kostnader i boxplotar.
-
-Variabeln chronic_condition inkluderades inte, då dess samband med kostnader bedömdes vara svagare jämfört med BMI och rökstatus.
-
-
+En sammansatt riskvariabel, `risk_level`, konstruerades utifrån rökstatus och BMI. I konstruktionen användes en förenklad indelning där BMI över 30 klassificerades som hög risk, vilket motsvarar kategorin “obese”. Detta motiveras av den inledande analysen, där BMI visade ett positivt samband med kostnader, samtidigt som rökare uppvisade tydligt högre kostnader i boxplotar. Variabeln `chronic_condition` inkluderades inte i denna sammanslagning, då dess samband med kostnader bedömdes vara svagare i den inledande analysen, och för att undvika att skapa en alltför komplex variabel.
 
 Slutligen skapades variablerna `history` och `history_level`, där tidigare olyckor och tidigare claims kombinerades. Detta motiveras av att båda variablerna visade positiva samband med kostnader och beskriver relaterade aspekter av individens skadehistorik.
 
+Nedan presenteras fördelningen för ett urval av de skapade variablerna.
 ```{r}
 insurance_cost %>% count(bmi_category)
 insurance_cost %>% count(risk_level)
 insurance_cost %>% count(history_level)
 ```
 
+## 3.4 Sammanfattning 
+Datastädningen syftade till att skapa en konsekvent och analysbar datamängd. Genom standardisering av kategoriska variabler, hantering av saknade värden samt konstruktion av nya variabler förbättrades förutsättningarna för den fortsatta analysen. Dessa steg möjliggör en mer tillförlitlig beskrivande analys och regressionsmodellering.
 
-## 2.1 Översikt av datamängd
 
-## 2.2 Datastädning
+# 4 Beskrivande analys
 
-## 2.3 Skapande av variabler
+Den beskrivande analysen används för att identifiera vilka variabler som är mest relevanta att inkludera i regressionsmodellen.
 
-# 3. Beskrivande analys
 
-## 3.1 Hur kostnaderna är fördelade
+## 4.1 Fördelning av försäkringskostnader
 
-## 3.2 Variabler som verkar intressanta att undersöka vidare
+Fördelningen av försäkringskostnader undersöktes med histogram. I ursprunglig skala är variabeln tydligt högerskev, vilket innebär att majoriteten av observationerna har relativt låga kostnader medan ett mindre antal observationer uppvisar mycket höga värden.
 
-## 3.3 Skillnader mellan grupper
+```{r}
+plot_charges_distribution(insurance_cost)
+```
 
-# 4. Sammanfattning av den beskrivande analysen
+För att undersöka om fördelningen påverkades av skillnader mellan grupper visualiserades kostnaderna även efter rökstatus. Resultatet visar att rökare generellt har högre och mer spridda kostnader än icke-rökare. Detta tyder på att den totala fördelningen delvis utgörs av två grupper med olika kostnadsnivåer.
 
-# 5. Regressionsanalys
+```{r}
+plot_charges_distribution_fill(insurance_cost, smoker)
+```
+
+Eftersom originalvariabeln var skev undersöktes även en log-transformerad version av kostnaderna. Den log-transformerade variabeln uppvisar en betydligt mer symmetrisk fördelning, vilket talar för att transformationen är lämplig vid fortsatt statistisk analys.
+
+```{r}
+plot_log_charges_distribution(insurance_cost)
+```
+
+Sammantaget visar resultaten att försäkringskostnaderna inte är normalfördelade i ursprunglig skala, att rökstatus är starkt relaterad till kostnadsnivå, samt att log-transformering förbättrar fördelningens symmetri.
+
+
+## 4.2 Samband med numeriska variabler
+
+För att undersöka hur numeriska variabler hänger samman med försäkringskostnader analyserades sambanden både visuellt med scatterplots och mer översiktligt med en korrelationsmatris.
+
+Scatterploten mellan BMI och kostnader visar ett positivt samband, där högre BMI tenderar att vara förknippat med högre kostnader. När rökstatus inkluderas framgår att sambandet är tydligare för rökare än för icke-rökare, vilket tyder på att effekten av BMI kan variera beroende på rökstatus. Detta ger också stöd för konstruktionen av den sammansatta variabeln `risk_level`, där både BMI och rökstatus kombineras för att fånga deras gemensamma effekt på kostnader.
+
+```{r}
+plot_scatter_grouped(
+  insurance_cost,
+  bmi,
+  color_var = smoker,
+  title = "BMI, rökstatus och kostnader",
+  x_label = "BMI",
+  color_label = "Rökstatus"
+)
+```
+
+För ålder observeras ett liknande mönster, där kostnaderna generellt ökar med stigande ålder. När rökstatus inkluderas framgår att rökare konsekvent har högre kostnader än icke-rökare inom samtliga åldersgrupper, vilket indikerar att rökstatus har en stark effekt oberoende av ålder.
+
+```{r}
+plot_scatter_grouped(
+  insurance_cost,
+  age,
+  color_var = smoker,
+  title = "Ålder, rökstatus och kostnader",
+  x_label = "Ålder",
+  color_label = "Rökstatus"
+)
+```
+
+Som komplement användes en korrelationsmatris för att ge en samlad bild av sambanden mellan de numeriska variablerna. Analysen visar att variabler relaterade till tidigare skadehistorik samt ålder uppvisar de starkaste positiva sambanden med kostnader. BMI uppvisar också ett positivt samband, men detta är svagare i jämförelse.
+
+
+```{r}
+plot_correlation_matrix(insurance_cost)
+```
+
+Sammantaget indikerar resultaten att ålder, skadehistorik och rökstatus är centrala faktorer för att förklara variationen i försäkringskostnader, medan BMI bidrar med ytterligare men mer begränsad förklaringskraft. Dessa variabler framstår därför som särskilt relevanta att inkludera i den fortsatta regressionsanalysen.
+
+
+## 4.3 Skillnader mellan grupper
+
+För att undersöka skillnader i kostnadsnivå mellan olika grupper analyserades kategoriska variabler med hjälp av boxplots. Som stöd för urvalet genomfördes även en inledande jämförelse av skillnader i kostnadsnivå mellan grupper.
+
+
+Denna analys indikerade att rökstatus samt tidigare skadehistorik uppvisade de största skillnaderna i kostnader. Även den konstruerade variabeln `risk_level` visade tydliga skillnader mellan grupper.
+
+Variabeln `chronic_condition` uppvisade också relativt tydliga skillnader, men i mindre utsträckning jämfört med rökstatus och skadehistorik. Övriga kategoriska variabler visade däremot mer begränsade skillnader i kostnadsnivå och bedömdes därför vara mindre centrala i den fortsatta analysen.
+
+Rökstatus visar tydliga skillnader i kostnader, där rökare har avsevärt högre kostnader än icke-rökare. Skillnaden är stor både i median och spridning, vilket indikerar att rökning är en av de mest betydelsefulla faktorerna bakom variationen i försäkringskostnader.
+
+```{r}
+plot_charges_by_group(
+  insurance_cost,
+  smoker,
+  title = "Kostnader per rökstatus",
+  x_label = "Rökstatus"
+)
+```
+
+Även tidigare skadehistorik visar tydliga skillnader i kostnader. Individer med högre historiknivå uppvisar generellt högre kostnader, vilket tyder på att tidigare olyckor och försäkringsärenden är viktiga indikatorer för framtida kostnader.
+
+
+```{r}
+plot_charges_by_group(
+  insurance_cost,
+  history_level,
+  title = "Kostnader per historiknivå",
+  x_label = "Historiknivå"
+)
+```
+Sammantaget visar analysen att rökstatus och tidigare skadehistorik är starkt relaterade till försäkringskostnader, medan andra kategoriska variabler bidrar i mindre utsträckning till att förklara variationen i kostnader. Resultaten ger därmed ett tydligt underlag för vilka variabler som bör prioriteras i den fortsatta regressionsanalysen.
+
+
+## 4.4 Sammanfattning
+
+Den beskrivande analysen visar att försäkringskostnader påverkas av flera faktorer, där rökstatus, ålder och tidigare skadehistorik framstår som särskilt betydelsefulla. Resultaten indikerar även att vissa variabler samverkar, vilket motiverar en vidare analys med regressionsmodeller för att kvantifiera dessa samband.
+
+
+

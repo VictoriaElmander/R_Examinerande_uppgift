@@ -18,6 +18,18 @@ plot_log_charges_distribution <- function(data) {
     )
 }
 
+plot_charges_distribution_fill <- function(data, fill_var = smoker) {
+  ggplot(data, aes(x = charges, fill = {{ fill_var }})) +
+    geom_histogram(bins = 30, alpha = 0.5, position = "identity") +
+    labs(
+      title = "Fördelning av kostnader per grupp",
+      x = "Kostnad",
+      y = "Antal"
+    )
+}
+
+
+
 
 plot_correlation_matrix <- function(data, target = "charges", exclude = "log_charges") {
   
@@ -162,6 +174,36 @@ plot_charges_by_group_factor <- function(data, group_var, title = NULL, x_label 
       y = "Kostnad"
     ) +
     theme_minimal()
+}
+
+create_impact_table <- function(data, outcome = "charges") {
+  
+  compare_var <- function(data, var, outcome) {
+    data %>%
+      group_by(.data[[var]]) %>%
+      summarise(
+        median = median(.data[[outcome]], na.rm = TRUE),
+        mean = mean(.data[[outcome]], na.rm = TRUE),
+        .groups = "drop"
+      ) %>%
+      summarise(
+        median_diff = max(median) - min(median),
+        mean_diff = max(mean) - min(mean)
+      )
+  }
+  
+  cat_vars <- data %>%
+    select(where(is.factor)) %>%
+    names()
+  
+  tibble(variable = cat_vars) %>%
+    rowwise() %>%
+    mutate(
+      stats = list(compare_var(data, variable, outcome))
+    ) %>%
+    tidyr::unnest(stats) %>%
+    ungroup() %>%
+    arrange(desc(median_diff))
 }
 
 

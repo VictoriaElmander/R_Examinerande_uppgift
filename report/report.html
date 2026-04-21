@@ -155,11 +155,12 @@ $ charges           &lt;dbl&gt; 6439.10, 8274.06, 5190.99, 14500.35, 6534.40, 80
 </section>
 <section id="datastädning-och-förberedelse" class="level1">
 <h1>3. Datastädning och förberedelse</h1>
-<p>Datamängden städades och förbereddes inför analysen genom att textvariabler standardiserades, kategoriska variabler omvandlades till faktorer, saknade värden hanterades och nya variabler skapades.</p>
+<p>Datamängden förbereddes inför analys genom standardisering av textvariabler, omkodning av kategoriska variabler till faktorer, hantering av saknade värden samt konstruktion av nya variabler för att förbättra tolkbarhet och analysbarhet.</p>
 <section id="städning-av-kategoriska-variabler" class="level2">
 <h2 class="anchored" data-anchor-id="städning-av-kategoriska-variabler">3.1 Städning av kategoriska variabler</h2>
-<p>Först togs onödiga mellanslag bort i alla textvariabler. Därefter standardiserades textformatet i de kategoriska variablerna, exempelvis genom att vissa variabler omvandlades till gemener och andra till titel-format. Detta gjordes för att undvika att samma kategori behandlas som olika värden på grund av skillnader i stavning eller användning av stora och små bokstäver.</p>
-<p>Efter detta omvandlades de kategoriska variablerna till faktorer. Det gäller bland annat <code>sex</code>, <code>region</code>, <code>smoker</code>, <code>chronic_condition</code>, <code>exercise_level</code> och <code>plan_type</code>. Detta är viktigt för att variablerna ska kunna användas korrekt i den fortsatta analysen och i regressionsmodeller.</p>
+<p>Onödiga mellanslag i textvariabler avlägsnades och textformat standardiserades, exempelvis genom omvandling till gemener respektive titel-format. Syftet var att undvika att identiska kategorier behandlas som olika värden på grund av inkonsekvent stavning.</p>
+<p>Därefter omvandlades relevanta variabler (<code>sex</code>, <code>region</code>, <code>smoker</code>, <code>chronic_condition</code>, <code>exercise_level</code>, <code>plan_type</code>) till faktorer. Detta är nödvändigt för att variablerna ska kunna användas korrekt i vidare statistisk analys och regressionsmodeller.</p>
+<p>En kontroll av dubletter, både på radnivå och baserat på customer_id, visade att inga dubbla observationer förekom i datamängden.</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">glimpse</span>(insurance_cost)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
@@ -190,8 +191,8 @@ $ history_level     &lt;fct&gt; none, low, none, none, low, none, none, none, lo
 </section>
 <section id="hantering-av-saknade-värden" class="level2">
 <h2 class="anchored" data-anchor-id="hantering-av-saknade-värden">3.2 Hantering av saknade värden</h2>
-<p>Saknade värden hanterades olika beroende på variabeltyp. För den kategoriska variabeln <code>exercise_level</code> ersattes saknade värden med en egen kategori, “unknown”, för att observationerna skulle kunna behållas i analysen.</p>
-<p>För de numeriska variablerna <code>bmi</code> och annual_checkups` ersattes saknade värden med medianen. Medianen valdes eftersom den är en robust metod som påverkas mindre av extremvärden än medelvärdet.</p>
+<p>Saknade värden hanterades beroende på variabeltyp. För den kategoriska variabeln <code>exercise_level</code> ersattes saknade värden med en egen kategori (“unknown”) för att behålla observationer i analysen.</p>
+<p>För de numeriska variablerna <code>bmi</code> och <code>annual_checkups</code> ersattes saknade värden med medianen. Medianen valdes då den är robust mot extremvärden och därmed minskar risken för snedvridning i analysen.</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">colSums</span>(<span class="fu">is.na</span>(insurance_cost))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
@@ -211,11 +212,12 @@ $ history_level     &lt;fct&gt; none, low, none, none, low, none, none, none, lo
 <section id="skapande-av-nya-variabler" class="level2">
 <h2 class="anchored" data-anchor-id="skapande-av-nya-variabler">3.3 Skapande av nya variabler</h2>
 <p>Flera nya variabler skapades för att göra analysen mer tolkbar och för att fånga mönster som inte framgår lika tydligt i de ursprungliga variablerna.</p>
-<p>En log-transformerad variabel, <code>log_charges</code>, skapades eftersom histogram visade att försäkringskostnaderna är snedfördelade. Log-transformeringen bidrar till en mer symmetrisk fördelning, vilket kan vara fördelaktigt i regressionsanalysen.</p>
-<p>Vidare skapades variabeln <code>bmi_category</code>, där BMI delades in i kategorier. Detta motiveras av att BMI uppvisade ett positivt samband med kostnader i både korrelationsanalysen och scatterplots, och kategoriseringen möjliggör tydligare jämförelser mellan grupper.</p>
-<p>Variabeln <code>age_group</code> skapades för att undersöka om kostnader varierar mellan olika åldersgrupper. Även om ålder analyseras som en kontinuerlig variabel, kan en gruppering underlätta tolkningen av skillnader mellan yngre, medelålders och äldre individer.</p>
-<p>En sammansatt riskvariabel, <code>risk_level</code>, skapades utifrån rökstatus och BMI. Detta motiveras av den inledande analysen, där korrelationsanalysen visade att BMI har ett positivt samband med kostnader, medan boxplotar visade att rökare generellt har högre kostnader än icke-rökare. Genom att kombinera dessa variabler kan den samlade effekten av hälsorelaterade riskfaktorer fångas i ett mer informativt mått.</p>
-<p>Slutligen skapades variablerna <code>history</code> och <code>history_level</code>, där tidigare olyckor och tidigare claims kombinerades. Detta motiveras av att båda variablerna visade positiva samband med kostnader i korrelationsanalysen och beskriver relaterade aspekter av individens skadehistorik. Genom att slå samman dessa till en gemensam variabel erhålls ett mer sammanfattat och tolkningsbart mått.</p>
+<p>En log-transformerad variabel, <code>log_charges</code>, skapades eftersom histogram visade att kostnadsvariabeln är snedfördelad. Transformeringen ger en mer symmetrisk fördelning, vilket är fördelaktigt vid regressionsanalys.</p>
+<p>Variabeln <code>bmi_category</code> skapades genom att dela in BMI i kategorier. Detta motiveras av att BMI visade ett positivt samband med kostnader i både korrelationsanalys och scatterplots, samtidigt som kategorisering underlättar jämförelser mellan grupper.</p>
+<p>Variabeln <code>age_group</code> skapades för att möjliggöra jämförelser mellan olika åldersgrupper, vilket kan bidra till en mer lättolkad analys jämfört med enbart kontinuerlig variabel.</p>
+<p>En sammansatt riskvariabel, <code>risk_level</code>, konstruerades utifrån rökstatus och BMI. I konstruktionen användes en förenklad indelning där BMI över 30 klassificerades som hög risk, vilket motsvarar kategorin “obese”. Detta motiveras av den inledande analysen, där BMI visade ett positivt samband med kostnader, samtidigt som rökare uppvisade tydligt högre kostnader i boxplotar. Variabeln <code>chronic_condition</code> inkluderades inte i denna sammanslagning, då dess samband med kostnader bedömdes vara svagare i den inledande analysen, och för att undvika att skapa en alltför komplex variabel.</p>
+<p>Slutligen skapades variablerna <code>history</code> och <code>history_level</code>, där tidigare olyckor och tidigare claims kombinerades. Detta motiveras av att båda variablerna visade positiva samband med kostnader och beskriver relaterade aspekter av individens skadehistorik.</p>
+<p>Nedan presenteras fördelningen för ett urval av de skapade variablerna.</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>insurance_cost <span class="sc">%&gt;%</span> <span class="fu">count</span>(bmi_category)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
@@ -247,33 +249,162 @@ $ history_level     &lt;fct&gt; none, low, none, none, low, none, none, none, lo
 </div>
 </div>
 </section>
-<section id="översikt-av-datamängd-1" class="level2">
-<h2 class="anchored" data-anchor-id="översikt-av-datamängd-1">2.1 Översikt av datamängd</h2>
-</section>
-<section id="datastädning" class="level2">
-<h2 class="anchored" data-anchor-id="datastädning">2.2 Datastädning</h2>
-</section>
-<section id="skapande-av-variabler" class="level2">
-<h2 class="anchored" data-anchor-id="skapande-av-variabler">2.3 Skapande av variabler</h2>
+<section id="sammanfattning" class="level2">
+<h2 class="anchored" data-anchor-id="sammanfattning">3.4 Sammanfattning</h2>
+<p>Datastädningen syftade till att skapa en konsekvent och analysbar datamängd. Genom standardisering av kategoriska variabler, hantering av saknade värden samt konstruktion av nya variabler förbättrades förutsättningarna för den fortsatta analysen. Dessa steg möjliggör en mer tillförlitlig beskrivande analys och regressionsmodellering.</p>
 </section>
 </section>
 <section id="beskrivande-analys" class="level1">
-<h1>3. Beskrivande analys</h1>
-<section id="hur-kostnaderna-är-fördelade" class="level2">
-<h2 class="anchored" data-anchor-id="hur-kostnaderna-är-fördelade">3.1 Hur kostnaderna är fördelade</h2>
+<h1>4 Beskrivande analys</h1>
+<p>Den beskrivande analysen används för att identifiera vilka variabler som är mest relevanta att inkludera i regressionsmodellen.</p>
+<section id="fördelning-av-försäkringskostnader" class="level2">
+<h2 class="anchored" data-anchor-id="fördelning-av-försäkringskostnader">4.1 Fördelning av försäkringskostnader</h2>
+<p>Fördelningen av försäkringskostnader undersöktes med histogram. I ursprunglig skala är variabeln tydligt högerskev, vilket innebär att majoriteten av observationerna har relativt låga kostnader medan ett mindre antal observationer uppvisar mycket höga värden.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_charges_distribution</span>(insurance_cost)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="report_files/figure-html/unnamed-chunk-8-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>För att undersöka om fördelningen påverkades av skillnader mellan grupper visualiserades kostnaderna även efter rökstatus. Resultatet visar att rökare generellt har högre och mer spridda kostnader än icke-rökare. Detta tyder på att den totala fördelningen delvis utgörs av två grupper med olika kostnadsnivåer.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_charges_distribution_fill</span>(insurance_cost, smoker)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="report_files/figure-html/unnamed-chunk-9-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Eftersom originalvariabeln var skev undersöktes även en log-transformerad version av kostnaderna. Den log-transformerade variabeln uppvisar en betydligt mer symmetrisk fördelning, vilket talar för att transformationen är lämplig vid fortsatt statistisk analys.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_log_charges_distribution</span>(insurance_cost)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="report_files/figure-html/unnamed-chunk-10-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Sammantaget visar resultaten att försäkringskostnaderna inte är normalfördelade i ursprunglig skala, att rökstatus är starkt relaterad till kostnadsnivå, samt att log-transformering förbättrar fördelningens symmetri.</p>
 </section>
-<section id="variabler-som-verkar-intressanta-att-undersöka-vidare" class="level2">
-<h2 class="anchored" data-anchor-id="variabler-som-verkar-intressanta-att-undersöka-vidare">3.2 Variabler som verkar intressanta att undersöka vidare</h2>
+<section id="samband-med-numeriska-variabler" class="level2">
+<h2 class="anchored" data-anchor-id="samband-med-numeriska-variabler">4.2 Samband med numeriska variabler</h2>
+<p>För att undersöka hur numeriska variabler hänger samman med försäkringskostnader analyserades sambanden både visuellt med scatterplots och mer översiktligt med en korrelationsmatris.</p>
+<p>Scatterploten mellan BMI och kostnader visar ett positivt samband, där högre BMI tenderar att vara förknippat med högre kostnader. När rökstatus inkluderas framgår att sambandet är tydligare för rökare än för icke-rökare, vilket tyder på att effekten av BMI kan variera beroende på rökstatus. Detta ger också stöd för konstruktionen av den sammansatta variabeln <code>risk_level</code>, där både BMI och rökstatus kombineras för att fånga deras gemensamma effekt på kostnader.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_scatter_grouped</span>(</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>  insurance_cost,</span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>  bmi,</span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">color_var =</span> smoker,</span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">title =</span> <span class="st">"BMI, rökstatus och kostnader"</span>,</span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">x_label =</span> <span class="st">"BMI"</span>,</span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">color_label =</span> <span class="st">"Rökstatus"</span></span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'</code></pre>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="report_files/figure-html/unnamed-chunk-11-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>För ålder observeras ett liknande mönster, där kostnaderna generellt ökar med stigande ålder. När rökstatus inkluderas framgår att rökare konsekvent har högre kostnader än icke-rökare inom samtliga åldersgrupper, vilket indikerar att rökstatus har en stark effekt oberoende av ålder.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_scatter_grouped</span>(</span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>  insurance_cost,</span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>  age,</span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">color_var =</span> smoker,</span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">title =</span> <span class="st">"Ålder, rökstatus och kostnader"</span>,</span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">x_label =</span> <span class="st">"Ålder"</span>,</span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">color_label =</span> <span class="st">"Rökstatus"</span></span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'</code></pre>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="report_files/figure-html/unnamed-chunk-12-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Som komplement användes en korrelationsmatris för att ge en samlad bild av sambanden mellan de numeriska variablerna. Analysen visar att variabler relaterade till tidigare skadehistorik samt ålder uppvisar de starkaste positiva sambanden med kostnader. BMI uppvisar också ett positivt samband, men detta är svagare i jämförelse.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_correlation_matrix</span>(insurance_cost)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="report_files/figure-html/unnamed-chunk-13-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Sammantaget indikerar resultaten att ålder, skadehistorik och rökstatus är centrala faktorer för att förklara variationen i försäkringskostnader, medan BMI bidrar med ytterligare men mer begränsad förklaringskraft. Dessa variabler framstår därför som särskilt relevanta att inkludera i den fortsatta regressionsanalysen.</p>
 </section>
-<section id="skillnader-mellan-grupper" class="level2">
-<h2 class="anchored" data-anchor-id="skillnader-mellan-grupper">3.3 Skillnader mellan grupper</h2>
+<section id="section" class="level2">
+<h2 class="anchored" data-anchor-id="section">4.3</h2>
+<p>För att undersöka skillnader i kostnadsnivå mellan olika grupper analyserades kategoriska variabler med hjälp av boxplots. Som stöd för urvalet genomfördes även en inledande jämförelse av skillnader i kostnadsnivå mellan grupper.</p>
+<p>Denna analys indikerade att rökstatus samt tidigare skadehistorik uppvisade de största skillnaderna i kostnader. Även den konstruerade variabeln <code>risk_level</code> visade tydliga skillnader mellan grupper.</p>
+<p>Variabeln <code>chronic_condition</code> uppvisade också relativt tydliga skillnader, men i mindre utsträckning jämfört med rökstatus och skadehistorik. Övriga kategoriska variabler visade däremot mer begränsade skillnader i kostnadsnivå och bedömdes därför vara mindre centrala i den fortsatta analysen.</p>
+<p>Rökstatus visar tydliga skillnader i kostnader, där rökare har avsevärt högre kostnader än icke-rökare. Skillnaden är stor både i median och spridning, vilket indikerar att rökning är en av de mest betydelsefulla faktorerna bakom variationen i försäkringskostnader.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_charges_by_group</span>(</span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>  insurance_cost,</span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>  smoker,</span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">title =</span> <span class="st">"Kostnader per rökstatus"</span>,</span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">x_label =</span> <span class="st">"Rökstatus"</span></span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="report_files/figure-html/unnamed-chunk-14-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Även variabler relaterade till tidigare skadehistorik visar tydliga skillnader. Individer med högre historiknivå uppvisar generellt högre kostnader, vilket tyder på att tidigare olyckor och försäkringsärenden är viktiga indikatorer för framtida kostnader.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_charges_by_group</span>(</span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>  insurance_cost,</span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>  history_level,</span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">title =</span> <span class="st">"Kostnader per historiknivå"</span>,</span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">x_label =</span> <span class="st">"Historiknivå"</span></span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="report_files/figure-html/unnamed-chunk-15-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Sammantaget visar analysen att rökstatus och tidigare skadehistorik är starkt relaterade till försäkringskostnader, medan andra kategoriska variabler bidrar i mindre utsträckning. Resultaten ger därmed ett tydligt underlag för vilka variabler som bör prioriteras i den fortsatta regressionsanalysen.</p>
+<p>Struktur för Del 4</p>
+<p>Gör så här:</p>
+<ol start="4" type="1">
+<li>Beskrivande analys 4.1 Fördelning av kostnader</li>
+</ol>
+<p>(hist + log hist)</p>
+<p>4.2 Samband med numeriska variabler</p>
+<p>(scatterplots)</p>
+<p>4.3 Skillnader mellan grupper</p>
+<p>(boxplot smoker)</p>
+<p>4.4 Sammanfattning av samband</p>
+<p>(korrelationsmatris)</p>
 </section>
-</section>
-<section id="sammanfattning-av-den-beskrivande-analysen" class="level1">
-<h1>4. Sammanfattning av den beskrivande analysen</h1>
-</section>
-<section id="regressionsanalys" class="level1">
-<h1>5. Regressionsanalys</h1>
 </section>
 
 </main>
