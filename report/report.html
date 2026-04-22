@@ -99,6 +99,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
+<div class="cell">
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="report_files/figure-html/unnamed-chunk-1-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
 <section id="inledning" class="level1">
 <h1>1. Inledning</h1>
 <p>Syftet med analysen är att undersöka vilka faktorer som är relaterade till försäkringskostnader samt att utvärdera om en regressionsmodell kan användas för att förklara och förutsäga kostnader för framtida kunder.</p>
@@ -402,8 +411,339 @@ $ history_level     &lt;fct&gt; none, low, none, none, low, none, none, none, lo
 <h1>5 Regrissionsanalys</h1>
 <section id="val-av-prediktorer" class="level2">
 <h2 class="anchored" data-anchor-id="val-av-prediktorer">5.1 Val av prediktorer</h2>
-<p>Utifrån den beskrivande analysen valdes prediktorer som visade tydliga samband med försäkringskostnader. Särskilt relevanta framstod rökstatus, ålder, BMI och tidigare skadehistorik. Även chronic_condition bedömdes vara rimlig att inkludera, då variabeln visade vissa skillnader i kostnadsnivå mellan grupper.</p>
-<p>Vid modelleringen är det viktigt att undvika att inkludera starkt överlappande variabler samtidigt. Därför bör exempelvis både history och history_level eller både bmi och bmi_category inte användas i samma modell utan tydlig motivering.</p>
+<p>Utifrån den beskrivande analysen valdes prediktorer som visade tydliga samband med försäkringskostnader. Särskilt relevanta variabler var <code>age</code>, <code>bmi</code> och <code>smoker</code>, då dessa uppvisade tydliga mönster i både scatterplots och gruppjämförelser.</p>
+<p>För att förbättra modellens förklaringskraft inkluderades även <code>chronic_condition</code> och <code>history</code>, eftersom dessa variabler fångar individers hälsotillstånd och tidigare skadehistorik, vilka båda visade samband med kostnader.</p>
+<p>Vid modelleringen är det viktigt att undvika att inkludera variabler som överlappar varandra informationsmässigt. Därför användes den numeriska variabeln <code>history</code> istället för den kategoriserade varianten <code>history_level</code>, då den ger mer detaljerad information och uppvisar ett ungefär linjärt samband med kostnader. Generellt eftersträvades att undvika redundanta variabler i modellen, för att förbättra både tolkbarhet och modellens stabilitet.</p>
+</section>
+<section id="modell-1-grundmodell" class="level2">
+<h2 class="anchored" data-anchor-id="modell-1-grundmodell">5.2 Modell 1: grundmodell</h2>
+<p>En första modell byggdes med <code>age</code>, <code>bmi</code> och <code>smoker</code> som prediktorer. Dessa variabler valdes eftersom de i den beskrivande analysen visade tydliga samband med kostnader och samtidigt är enkla att tolka.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(model_1)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Call:
+lm(formula = charges ~ age + bmi + smoker, data = insurance_cost)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-8154.5 -2149.5  -255.8  1838.9 17717.0 
+
+Coefficients:
+            Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept)  364.515    646.479   0.564    0.573    
+age           88.578      7.559  11.719  &lt; 2e-16 ***
+bmi          162.288     20.644   7.861 9.05e-15 ***
+smokeryes   7969.128    240.208  33.176  &lt; 2e-16 ***
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+Residual standard error: 3094 on 1096 degrees of freedom
+Multiple R-squared:  0.5437,    Adjusted R-squared:  0.5425 
+F-statistic: 435.3 on 3 and 1096 DF,  p-value: &lt; 2.2e-16</code></pre>
+</div>
+</div>
+<p>Den första modellen visar att samtliga prediktorer utom interceptet är statistiskt signifikanta (p &lt; 0.001). Särskilt rökstatus har en stark effekt, där rökare i genomsnitt har ungefär 8 000 högre kostnader än icke-rökare givet samma ålder och BMI. Även ålder och BMI uppvisar positiva samband med kostnader, vilket innebär att högre ålder och högre BMI tenderar att vara förknippade med högre försäkringskostnader.</p>
+<p>Modellens förklaringsgrad är ungefär 54 procent, vilket innebär att modellen fångar en betydande del av variationen i kostnader, men att en stor del fortfarande förblir oförklarad. Justerat R² är mycket likt R², vilket indikerar att modellen inte innehåller några uppenbart överflödiga variabler. Modellen är därmed användbar för att beskriva generella samband, men mindre tillförlitlig för att förutsäga mer extrema kostnader.</p>
+<p>Diagnostik för modell 1</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_residuals_grouped</span>(</span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>  model_1,</span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>  insurance_cost,</span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">color_var =</span> smoker,</span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">title =</span> <span class="st">"Residualplot för modell 1"</span></span>
+<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="report_files/figure-html/unnamed-chunk-17-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="fu">bptest</span>(model_1)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+    studentized Breusch-Pagan test
+
+data:  model_1
+BP = 9.4621, df = 3, p-value = 0.02374</code></pre>
+</div>
+</div>
+<p>Residualanalysen visar att residualerna i huvudsak är centrerade kring noll, vilket är önskvärt, men att vissa observationer avviker tydligt. Spridningen varierar något över nivåer av fitted values, vilket indikerar möjlig heteroskedasticitet. Detta bekräftas av Breusch–Pagan-testet, som är statistiskt signifikant (p = 0.024), vilket innebär att nollhypotesen om konstant varians förkastas och att modellen uppvisar heteroskedasticitet.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_qq_model</span>(model_1, <span class="at">title =</span> <span class="st">"Q-Q-plot för modell 1"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="report_files/figure-html/unnamed-chunk-18-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Q-Q-plottet visar att residualerna följer normalfördelningen relativt väl i mitten av fördelningen, men avviker i svansarna. Detta tyder på att modellen har svårare att fånga mycket höga kostnader, vilket är vanligt i kostnadsdata.</p>
+<p>Sammantaget tyder resultaten på att de valda prediktorerna bidrar till att förklara variationen i försäkringskostnader, även om modellen har begränsningar i att fånga extrema värden.</p>
+</section>
+<section id="modell-2-utökad-modell" class="level2">
+<h2 class="anchored" data-anchor-id="modell-2-utökad-modell">5.3 Modell 2: utökad modell</h2>
+<p>För att förbättra modellen inkluderades ytterligare variabler som visade samband med kostnader i den beskrivande analysen. Den utökade modellen innehåller, utöver <code>age</code>, <code>bmi</code> och <code>smoker</code>, även <code>chronic_condition</code> och <code>history</code>.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(model_2)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Call:
+lm(formula = charges ~ age + bmi + smoker + chronic_condition + 
+    history, data = insurance_cost)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-9320.4 -1553.5  -153.5  1469.6 18345.5 
+
+Coefficients:
+                     Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept)          -445.906    508.806  -0.876    0.381    
+age                    72.396      5.967  12.133   &lt;2e-16 ***
+bmi                   166.211     16.207  10.255   &lt;2e-16 ***
+smokeryes            7574.937    189.497  39.974   &lt;2e-16 ***
+chronic_conditionyes 3956.908    172.045  22.999   &lt;2e-16 ***
+history               980.065     92.337  10.614   &lt;2e-16 ***
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+Residual standard error: 2429 on 1094 degrees of freedom
+Multiple R-squared:  0.7193,    Adjusted R-squared:  0.718 
+F-statistic: 560.7 on 5 and 1094 DF,  p-value: &lt; 2.2e-16</code></pre>
+</div>
+</div>
+<p>Den utökade modellen visar en tydlig förbättring jämfört med grundmodellen. Samtliga prediktorer är statistiskt signifikanta (p &lt; 0.001), vilket indikerar att de bidrar till att förklara variationen i försäkringskostnader.</p>
+<p>Förklaringsgraden ökar till cirka 72 procent, vilket innebär att modellen fångar en större del av variationen i kostnader jämfört med modell 1. Justerat R² är mycket likt R², vilket indikerar att de tillagda variablerna bidrar till modellen utan att introducera onödig komplexitet. Detta tyder på att variabler relaterade till hälsa och skadehistorik utgör viktiga faktorer för att förstå försäkringskostnader.</p>
+<p>Diagnostik modell 2</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_residuals_grouped</span>(</span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>  model_2,</span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>  insurance_cost,</span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">color_var =</span> smoker,</span>
+<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">title =</span> <span class="st">"Residualplot för modell 2"</span></span>
+<span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="report_files/figure-html/unnamed-chunk-20-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb36"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="fu">bptest</span>(model_2)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+    studentized Breusch-Pagan test
+
+data:  model_2
+BP = 9.9833, df = 5, p-value = 0.07571</code></pre>
+</div>
+</div>
+<p>Residualanalysen visar att modellen fortfarande är centrerad kring noll, vilket är önskvärt. Spridningen i residualerna minskar tydligt jämfört med modell 1, vilket även bekräftas av en markant minskning i residual standard error. Detta tyder på att modellen har en bättre anpassning och fångar variationen i kostnader mer effektivt.</p>
+<p>Samtidigt är skillnaden i residualernas spridning visuellt mindre tydlig, då residualplottarna för modell 1 och modell 2 uppvisar liknande mönster. Detta beror sannolikt på att extrema observationer fortfarande förekommer och påverkar den övergripande bilden.</p>
+<p>Residualerna uppvisar inte heller några starka systematiska mönster över olika nivåer av fitted values, vilket tyder på att antagandet om konstant varians i huvudsak är uppfyllt.</p>
+<p>Detta stöds även av Breusch–Pagan-testet, som inte är statistiskt signifikant (p = 0.076), vilket innebär att nollhypotesen om homoskedasticitet inte kan förkastas.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb38"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_qq_model</span>(model_2, <span class="at">title =</span> <span class="st">"Q-Q-plot för modell 2"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="report_files/figure-html/unnamed-chunk-21-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Q-Q-plottet visar ett liknande mönster som i modell 1, där residualerna följer normalfördelningen relativt väl i mitten men avviker i svansarna. Detta tyder på att tillägget av nya prediktorer inte i någon större utsträckning förbättrar residualernas normalitet.</p>
+<p>Sammantaget innebär modell 2 en tydlig förbättring jämfört med grundmodellen, framför allt genom ökad förklaringsgrad och minskad residualspridning, även om vissa begränsningar kvarstår i att fånga extrema värden.</p>
+<p>Avvikelserna i residualernas svansar är i linje med den tidigare observerade snedfördelningen i kostnadsvariabeln. För att förbättra modellantagandena testas därför en log-transformerad modell.</p>
+</section>
+<section id="modell-3-log-transformerad-modell" class="level2">
+<h2 class="anchored" data-anchor-id="modell-3-log-transformerad-modell">5.4 Modell 3: log-transformerad modell</h2>
+<p>Eftersom försäkringskostnaderna tidigare visats vara högerskev fördelade testas en modell med log-transformerad responsvariabel. Syftet är att undersöka om detta kan förbättra modellens anpassning samt bättre uppfylla modellantaganden, såsom normalfördelade residualer och konstant varians.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb39"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(model_3)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Call:
+lm(formula = log_charges ~ age + bmi + smoker + chronic_condition + 
+    history, data = insurance_cost)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-1.58684 -0.15071  0.02647  0.19291  1.13332 
+
+Coefficients:
+                      Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept)          7.9749115  0.0624011 127.801   &lt;2e-16 ***
+age                  0.0082852  0.0007318  11.322   &lt;2e-16 ***
+bmi                  0.0184352  0.0019877   9.275   &lt;2e-16 ***
+smokeryes            0.6681663  0.0232403  28.750   &lt;2e-16 ***
+chronic_conditionyes 0.4029049  0.0211000  19.095   &lt;2e-16 ***
+history              0.1089449  0.0113245   9.620   &lt;2e-16 ***
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+Residual standard error: 0.2979 on 1094 degrees of freedom
+Multiple R-squared:   0.61, Adjusted R-squared:  0.6082 
+F-statistic: 342.2 on 5 and 1094 DF,  p-value: &lt; 2.2e-16</code></pre>
+</div>
+</div>
+<p>Den log-transformerade modellen visar att samtliga prediktorer är statistiskt signifikanta (p &lt; 0.001). Koefficienterna kan tolkas som approximativa procentuella förändringar i kostnader, vilket innebär att variablernas effekter nu uttrycks relativt snarare än i absoluta termer.</p>
+<p>Förklaringsgraden uppgår till cirka 61 procent. Även om detta är lägre än i modell 2 är värdena inte direkt jämförbara, eftersom modellerna använder olika skalor på responsvariabeln. Den log-transformerade modellen bör därför främst utvärderas utifrån hur väl den uppfyller modellantagandena.</p>
+<p>Diagnostik modell 3</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb41"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_residuals_grouped</span>(</span>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a>  model_3,</span>
+<span id="cb41-3"><a href="#cb41-3" aria-hidden="true" tabindex="-1"></a>  insurance_cost,</span>
+<span id="cb41-4"><a href="#cb41-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">color_var =</span> smoker,</span>
+<span id="cb41-5"><a href="#cb41-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">title =</span> <span class="st">"Residualplot för modell 3"</span></span>
+<span id="cb41-6"><a href="#cb41-6" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="report_files/figure-html/unnamed-chunk-23-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb42"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="fu">bptest</span>(model_3)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+    studentized Breusch-Pagan test
+
+data:  model_3
+BP = 56.529, df = 5, p-value = 6.323e-11</code></pre>
+</div>
+</div>
+<p>Residualanalysen visar att residualerna är centrerade kring noll, men att spridningen varierar systematiskt över nivåer av fitted values. Spridningen är större vid lägre värden och minskar vid högre, vilket tyder på heteroskedasticitet. För att undersöka antagandet om konstant varians genomfördes ett Breusch–Pagan-test. Testet är statistiskt signifikant (p &lt; 0.001), vilket ger starkt stöd för förekomst av heteroskedasticitet i modellen.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb44"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_qq_model</span>(model_3, <span class="at">title =</span> <span class="st">"Q-Q-plot för modell 3"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="report_files/figure-html/unnamed-chunk-24-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Q-Q-plottet visar att residualerna ligger närmare den teoretiska linjen jämfört med tidigare modeller, särskilt i mitten av fördelningen. Avvikelser kvarstår i svansarna, men dessa är mer symmetriska än tidigare, vilket indikerar en förbättrad normalitet.</p>
+<p>Sammantaget förbättrar den log-transformerade modellen normalitetsantagandet jämfört med tidigare modeller, men uppvisar samtidigt tydlig heteroskedasticitet. Detta står i kontrast till modell 2, där variansantagandet i högre grad var uppfyllt. Valet av modell innebär därmed en avvägning mellan förbättrad normalitet och försämrad variansstruktur.</p>
+</section>
+<section id="modell-4-slutlig-modell" class="level2">
+<h2 class="anchored" data-anchor-id="modell-4-slutlig-modell">5.5 Modell 4: Slutlig modell</h2>
+<p>Som slutlig modell väljs den log-transformerade modellen med interaktion mellan ålder och rökstatus. Syftet med denna modell är att fånga att effekten av ålder på försäkringskostnader kan skilja sig mellan rökare och icke-rökare.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb45"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(model_final)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Call:
+lm(formula = log_charges ~ age * smoker + bmi + chronic_condition + 
+    history, data = insurance_cost)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-1.5620 -0.1429  0.0255  0.1878  1.1495 
+
+Coefficients:
+                       Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept)           7.9248598  0.0639991 123.828  &lt; 2e-16 ***
+age                   0.0094265  0.0008084  11.661  &lt; 2e-16 ***
+smokeryes             0.9250057  0.0821436  11.261  &lt; 2e-16 ***
+bmi                   0.0184785  0.0019790   9.337  &lt; 2e-16 ***
+chronic_conditionyes  0.4034465  0.0210085  19.204  &lt; 2e-16 ***
+history               0.1096225  0.0112769   9.721  &lt; 2e-16 ***
+age:smokeryes        -0.0059994  0.0018411  -3.259  0.00115 ** 
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+Residual standard error: 0.2966 on 1093 degrees of freedom
+Multiple R-squared:  0.6137,    Adjusted R-squared:  0.6116 
+F-statistic: 289.4 on 6 and 1093 DF,  p-value: &lt; 2.2e-16</code></pre>
+</div>
+</div>
+<p>Den slutliga modellen visar att samtliga prediktorer är statistiskt signifikanta (p &lt; 0.01). Eftersom modellen är log-transformerad kan koefficienterna tolkas som approximativa procentuella förändringar i kostnader. Rökstatus har en stark effekt, där rökare har avsevärt högre kostnader än icke-rökare.</p>
+<p>Interaktionstermen mellan ålder och rökstatus är negativ och statistiskt signifikant, vilket indikerar att ålderns effekt på kostnader skiljer sig mellan grupperna. För icke-rökare ökar kostnaderna med cirka 0.94 procent per år, medan motsvarande ökning för rökare är cirka 0.34 procent per år. Detta innebär att ålder har en svagare påverkan på kostnader för rökare än för icke-rökare. Resultaten tyder på att rökning utgör en dominerande riskfaktor, vilket minskar den relativa betydelsen av ålder för denna grupp.</p>
+<p>Jämfört med modell 3 innebär tillägget av en interaktionsterm en mindre förbättring av modellens anpassning, vilket framgår av en något högre förklaringsgrad och en marginellt lägre residual standard error.</p>
+<p>Interaktionstermen är dessutom statistiskt signifikant, vilket indikerar att sambandet mellan ålder och kostnader skiljer sig mellan rökare och icke-rökare. Detta innebär att modellen fångar en ytterligare dimension av variationen i data.</p>
+<p>Samtidigt är förbättringen relativt begränsad, vilket tyder på att modellen i stort sett behåller samma struktur som modell 3, men med en mer nyanserad beskrivning av sambanden.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb47"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_residuals_grouped</span>(</span>
+<span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a>  model_final,</span>
+<span id="cb47-3"><a href="#cb47-3" aria-hidden="true" tabindex="-1"></a>  insurance_cost,</span>
+<span id="cb47-4"><a href="#cb47-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">color_var =</span> smoker,</span>
+<span id="cb47-5"><a href="#cb47-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">title =</span> <span class="st">"Residualplot för modell 4"</span></span>
+<span id="cb47-6"><a href="#cb47-6" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="report_files/figure-html/unnamed-chunk-26-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb48"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_qq_model</span>(model_final, <span class="at">title =</span> <span class="st">"Q-Q-plot för modell 4"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="report_files/figure-html/unnamed-chunk-26-2.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb49"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a><span class="fu">bptest</span>(model_final)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+    studentized Breusch-Pagan test
+
+data:  model_final
+BP = 60.061, df = 6, p-value = 4.374e-11</code></pre>
+</div>
+</div>
+<p>Diagnostiken visar ett liknande mönster som för modell 3, vilket är förväntat då modellerna endast skiljer sig genom en interaktionsterm. Residualplottet visar att spridningen varierar över nivåer av fitted values, vilket tyder på viss heteroskedasticitet. Detta stöds av Breusch–Pagan-testet, som är statistiskt signifikant och indikerar att variansantagandet inte är fullt uppfyllt. Q-Q-plottet visar att residualerna följer normalfördelningen relativt väl i mitten av fördelningen, med kvarvarande avvikelser i svansarna.</p>
+<p>Sammantaget innebär modellen en förbättring jämfört med modeller i ursprunglig skala, särskilt genom bättre hantering av snedfördelning och extrema värden. Trots kvarvarande heteroskedasticitet bedöms modellen ge en mer robust och tolkbar beskrivning av sambanden i data.</p>
+<p>Valet av slutlig modell innebär därmed en avvägning mellan hög förklaringsgrad och väl uppfyllda modellantaganden. Trots att modell 2 uppvisade högre förklaringsgrad valdes den bort, då dess residualer visade tydliga avvikelser från normalfördelning. Den log-transformerade modellen bedöms därför vara mer lämplig för att analysera försäkringskostnader.</p>
+<p>Som slutlig modell väljs den log-transformerade modellen med interaktion mellan ålder och rökstatus.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb51"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(model_final)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Call:
+lm(formula = log_charges ~ age * smoker + bmi + chronic_condition + 
+    history, data = insurance_cost)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-1.5620 -0.1429  0.0255  0.1878  1.1495 
+
+Coefficients:
+                       Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept)           7.9248598  0.0639991 123.828  &lt; 2e-16 ***
+age                   0.0094265  0.0008084  11.661  &lt; 2e-16 ***
+smokeryes             0.9250057  0.0821436  11.261  &lt; 2e-16 ***
+bmi                   0.0184785  0.0019790   9.337  &lt; 2e-16 ***
+chronic_conditionyes  0.4034465  0.0210085  19.204  &lt; 2e-16 ***
+history               0.1096225  0.0112769   9.721  &lt; 2e-16 ***
+age:smokeryes        -0.0059994  0.0018411  -3.259  0.00115 ** 
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+Residual standard error: 0.2966 on 1093 degrees of freedom
+Multiple R-squared:  0.6137,    Adjusted R-squared:  0.6116 
+F-statistic: 289.4 on 6 and 1093 DF,  p-value: &lt; 2.2e-16</code></pre>
+</div>
+</div>
+<p>Den slutliga modellen visar att samtliga prediktorer är statistiskt signifikanta. Eftersom modellen är log-transformerad kan effekterna tolkas som relativa förändringar i kostnader. Exempelvis innebär koefficienten för <code>smoker</code> att rökare har avsevärt högre kostnader än icke-rökare.</p>
+<p>Interaktionstermen mellan ålder och rökstatus är negativ och statistiskt signifikant, vilket indikerar att ålderns effekt på kostnader skiljer sig mellan grupperna. För icke-rökare ökar kostnaderna med cirka 0.94 procent per år, medan motsvarande ökning för rökare är cirka 0.34 procent per år. Detta innebär att ålder har en svagare påverkan på kostnader för rökare än för icke-rökare.</p>
+<p>Diagnostiken för modellen visar ett liknande mönster som för modell 3, med förbättrad normalitet i residualerna men kvarvarande heteroskedasticitet. Detta innebär att modellen inte fullt ut uppfyller alla antaganden, men att den ger en mer stabil representation av sambanden jämfört med modeller i ursprunglig skala.</p>
+<p>Valet av slutlig modell baseras på att den log-transformerade modellen ger en mer rimlig representation av sambanden, särskilt genom förbättrad normalitet i residualerna och en mer stabil hantering av extrema värden. Även om modellen uppvisar viss heteroskedasticitet, bedöms den ge en mer robust beskrivning av försäkringskostnader.</p>
+<p>Trots att modell 2 uppvisade högre förklaringsgrad valdes den bort, då residualerna i denna modell visade tydliga avvikelser från normalfördelning. Valet av modell innebär därmed en avvägning mellan hög förklaringsgrad och bättre uppfyllda modellantaganden.</p>
+<p>Detta tyder på att rökning i sig utgör en dominerande riskfaktor, vilket minskar den relativa betydelsen av ålder för denna grupp.</p>
+<p>Diagnostiken för modellen visar ett liknande mönster som för modell 3, med förbättrad normalitet i residualerna men kvarvarande heteroskedasticitet. Detta innebär att modellen inte fullt ut uppfyller alla antaganden, men att den ger en mer stabil representation av sambanden jämfört med modeller i ursprunglig skala.</p>
+<p>Valet av slutlig modell baseras på att den log-transformerade modellen ger en mer rimlig representation av sambanden, särskilt genom förbättrad normalitet i residualerna och en mer stabil hantering av extrema värden. Även om modellen uppvisar viss heteroskedasticitet, bedöms den ge en mer robust beskrivning av försäkringskostnader.</p>
+<p>Trots att modell 2 uppvisade högre förklaringsgrad valdes den bort, då residualerna i denna modell visade tydliga avvikelser från normalfördelning. Valet av modell innebär därmed en avvägning mellan hög förklaringsgrad och bättre uppfyllda modellantaganden.</p>
+<p>Resultaten tyder på att rökning utgör en dominerande riskfaktor, vilket minskar den relativa betydelsen av ålder för denna grupp.</p>
+<p>Som slutlig modell väljs den log-transformerade modellen med interaktion mellan ålder och rökstatus.</p>
+<p>Valet baseras på att denna modell ger en mer rimlig representation av sambanden, särskilt genom förbättrad normalitet i residualerna och en mer stabil hantering av extrema värden. Även om modellen uppvisar viss heteroskedasticitet, bedöms den ge en mer robust beskrivning av försäkringskostnader jämfört med modeller baserade på den ursprungliga skalan.</p>
+<p>Modellen möjliggör dessutom en mer tolkbar analys, där effekterna kan uttryckas som relativa förändringar i kostnader.</p>
+<p>Trots att modell 2 uppvisade högre förklaringsgrad, valdes den bort då residualerna i denna modell visade tydliga avvikelser från normalfördelning, vilket motiverade användningen av en log-transformerad modell.</p>
 </section>
 <section id="modell-1---grundmodell" class="level2">
 <h2 class="anchored" data-anchor-id="modell-1---grundmodell">5.2 Modell 1 - grundmodell</h2>
@@ -411,14 +751,14 @@ $ history_level     &lt;fct&gt; none, low, none, none, low, none, none, none, lo
 <p>age och bmi var relevanta numeriska variabler smoker var tydligt stark i gruppjämförelserna</p>
 <p>En första modell byggdes med ålder, BMI och rökstatus som prediktorer. Dessa variabler valdes eftersom de i den beskrivande analysen uppvisade tydliga samband med kostnader och samtidigt är enkla att tolka.</p>
 </section>
-<section id="modell-2-utökad-modell" class="level2">
-<h2 class="anchored" data-anchor-id="modell-2-utökad-modell">5.3 Modell 2 – utökad modell</h2>
+<section id="modell-2-utökad-modell-1" class="level2">
+<h2 class="anchored" data-anchor-id="modell-2-utökad-modell-1">5.3 Modell 2 – utökad modell</h2>
 <p>model_2 &lt;- lm(charges ~ age + bmi + smoker + chronic_condition + history_level + exercise_level, data = insurance_cost) summary(model_2)</p>
 <p>Alternativt kan du använda history i stället för history_level om du vill behålla den som numerisk.</p>
 <p>För att undersöka om modellen kunde förbättras byggdes även en utökad modell där ytterligare variabler inkluderades. Dessa valdes utifrån tidigare analys och med ambitionen att fånga både hälsorelaterade faktorer och skadehistorik.</p>
 </section>
-<section id="modell-3-log-transformerad-modell" class="level2">
-<h2 class="anchored" data-anchor-id="modell-3-log-transformerad-modell">5.4 Modell 3 log-transformerad modell</h2>
+<section id="modell-3-log-transformerad-modell-1" class="level2">
+<h2 class="anchored" data-anchor-id="modell-3-log-transformerad-modell-1">5.4 Modell 3 log-transformerad modell</h2>
 <p>model_3 &lt;- lm(log_charges ~ age + bmi + smoker + chronic_condition + history_level + exercise_level, data = insurance_cost) summary(model_3)</p>
 <p>Eftersom kostnadsvariabeln var tydligt snedfördelad testades även en modell med log-transformerad responsvariabel. Syftet var att undersöka om denna modell gav en bättre anpassning och mer rimliga modellantaganden.</p>
 </section>

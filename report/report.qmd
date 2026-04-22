@@ -88,7 +88,7 @@ insurance_cost %>% count(history_level)
 Datastädningen syftade till att skapa en konsekvent och analysbar datamängd. Genom standardisering av kategoriska variabler, hantering av saknade värden samt konstruktion av nya variabler förbättrades förutsättningarna för den fortsatta analysen. Dessa steg möjliggör en mer tillförlitlig beskrivande analys och regressionsmodellering.
 
 
-# 4 Beskrivande analys
+# 4. Beskrivande analys
 
 Den beskrivande analysen används för att identifiera vilka variabler som är mest relevanta att inkludera i regressionsmodellen.
 
@@ -195,41 +195,183 @@ Sammantaget visar analysen att rökstatus och tidigare skadehistorik är starkt 
 Den beskrivande analysen visar att försäkringskostnader påverkas av flera faktorer, där rökstatus, ålder och tidigare skadehistorik framstår som särskilt betydelsefulla. Resultaten indikerar även att vissa variabler samverkar, vilket motiverar en vidare analys med regressionsmodeller för att kvantifiera dessa samband.
 
 
-# 5 Regrissionsanalys
+# 5. Regrissionsanalys
 
 ## 5.1 Val av prediktorer
 
-Utifrån den beskrivande analysen valdes prediktorer som visade tydliga samband med försäkringskostnader. Särskilt relevanta framstod rökstatus, ålder, BMI och tidigare skadehistorik. Även chronic_condition bedömdes vara rimlig att inkludera, då variabeln visade vissa skillnader i kostnadsnivå mellan grupper.
+Utifrån den beskrivande analysen valdes prediktorer som visade tydliga samband med försäkringskostnader. Särskilt relevanta variabler var `age`, `bmi` och `smoker`, då dessa uppvisade tydliga mönster i både scatterplots och gruppjämförelser.
 
-Vid modelleringen är det viktigt att undvika att inkludera starkt överlappande variabler samtidigt. Därför bör exempelvis både history och history_level eller både bmi och bmi_category inte användas i samma modell utan tydlig motivering.
+För att förbättra modellens förklaringskraft inkluderades även `chronic_condition` och `history`, eftersom dessa variabler fångar individers hälsotillstånd och tidigare skadehistorik, vilka båda visade samband med kostnader.
 
-## 5.2 Modell 1 - grundmodell
+Vid modelleringen är det viktigt att undvika att inkludera variabler som överlappar varandra informationsmässigt. Därför användes den numeriska variabeln `history` istället för den kategoriserade varianten `history_level`, då den ger mer detaljerad information och uppvisar ett ungefär linjärt samband med kostnader. Generellt eftersträvades att undvika redundanta variabler i modellen, för att förbättra både tolkbarhet och modellens stabilitet.
 
-model_1 <- lm(charges ~ age + bmi + smoker, data = insurance_cost)
+
+## 5.2 Modell 1: grundmodell
+
+En första modell byggdes med `age`, `bmi` och `smoker` som prediktorer. Dessa variabler valdes eftersom de i den beskrivande analysen visade tydliga samband med kostnader och samtidigt är enkla att tolka.
+
+```{r}
 summary(model_1)
+```
+Den första modellen visar att samtliga prediktorer utom interceptet är statistiskt signifikanta (p < 0.001). Särskilt rökstatus har en stark effekt, där rökare i genomsnitt har ungefär 8 000 högre kostnader än icke-rökare givet samma ålder och BMI. Även ålder och BMI uppvisar positiva samband med kostnader, vilket innebär att högre ålder och högre BMI tenderar att vara förknippade med högre försäkringskostnader.
 
-age och bmi var relevanta numeriska variabler
-smoker var tydligt stark i gruppjämförelserna
+Modellens förklaringsgrad är ungefär 54 procent, vilket innebär att modellen fångar en betydande del av variationen i kostnader, men att en stor del fortfarande förblir oförklarad. Justerat R² är mycket likt R², vilket indikerar att modellen inte innehåller några uppenbart överflödiga variabler. Modellen är därmed användbar för att beskriva generella samband, men mindre tillförlitlig för att förutsäga mer extrema kostnader.
 
-En första modell byggdes med ålder, BMI och rökstatus som prediktorer. Dessa variabler valdes eftersom de i den beskrivande analysen uppvisade tydliga samband med kostnader och samtidigt är enkla att tolka.
+**Diagnostik för modell 1**
+
+```{r}
+plot_residuals_grouped(
+  model_1,
+  insurance_cost,
+  color_var = smoker,
+  title = "Residualplot för modell 1"
+)
+
+bptest(model_1)
+```
+Residualanalysen visar att residualerna i huvudsak är centrerade kring noll, vilket är önskvärt, men att vissa observationer avviker tydligt. Spridningen varierar något över nivåer av fitted values, vilket indikerar möjlig heteroskedasticitet. Detta bekräftas av Breusch–Pagan-testet, som är statistiskt signifikant (p = 0.024), vilket innebär att nollhypotesen om konstant varians förkastas och att modellen uppvisar heteroskedasticitet.
+
+```{r}
+
+plot_qq_model(model_1, title = "Q-Q-plot för modell 1")
+```
+
+Q-Q-plottet visar att residualerna följer normalfördelningen relativt väl i mitten av fördelningen, men avviker i svansarna. Detta tyder på att modellen har svårare att fånga mycket höga kostnader, vilket är vanligt i kostnadsdata.
+
+Sammantaget tyder resultaten på att de valda prediktorerna bidrar till att förklara variationen i försäkringskostnader, även om modellen har begränsningar i att fånga extrema värden.
 
 
-## 5.3 Modell 2 – utökad modell
+## 5.3 Modell 2: utökad modell
 
-model_2 <- lm(charges ~ age + bmi + smoker + chronic_condition + history_level + exercise_level, data = insurance_cost)
+För att förbättra modellen inkluderades ytterligare variabler som visade samband med kostnader i den beskrivande analysen. Den utökade modellen innehåller, utöver `age`, `bmi` och `smoker`, även `chronic_condition` och `history`.
+
+```{r}
 summary(model_2)
+```
+Den utökade modellen visar en tydlig förbättring jämfört med grundmodellen. Samtliga prediktorer är statistiskt signifikanta (p < 0.001), vilket indikerar att de bidrar till att förklara variationen i försäkringskostnader.
 
-Alternativt kan du använda history i stället för history_level om du vill behålla den som numerisk.
+Förklaringsgraden ökar till cirka 72 procent, vilket innebär att modellen fångar en större del av variationen i kostnader jämfört med modell 1. Justerat R² är mycket likt R², vilket indikerar att de tillagda variablerna bidrar till modellen utan att introducera onödig komplexitet. Detta tyder på att variabler relaterade till hälsa och skadehistorik utgör viktiga faktorer för att förstå försäkringskostnader.
 
-För att undersöka om modellen kunde förbättras byggdes även en utökad modell där ytterligare variabler inkluderades. Dessa valdes utifrån tidigare analys och med ambitionen att fånga både hälsorelaterade faktorer och skadehistorik.
+**Diagnostik modell 2**
+```{r}
+plot_residuals_grouped(
+  model_2,
+  insurance_cost,
+  color_var = smoker,
+  title = "Residualplot för modell 2"
+)
 
-## 5.4 Modell 3 log-transformerad modell
-model_3 <- lm(log_charges ~ age + bmi + smoker + chronic_condition + history_level + exercise_level, data = insurance_cost)
+bptest(model_2)
+```
+
+Residualanalysen visar att modellen fortfarande är centrerad kring noll, vilket är önskvärt. Spridningen i residualerna minskar tydligt jämfört med modell 1, vilket även bekräftas av en markant minskning i residual standard error. Detta tyder på att modellen har en bättre anpassning och fångar variationen i kostnader mer effektivt.
+
+Samtidigt är skillnaden i residualernas spridning visuellt mindre tydlig, då residualplottarna för modell 1 och modell 2 uppvisar liknande mönster. Detta beror sannolikt på att extrema observationer fortfarande förekommer och påverkar den övergripande bilden.
+
+Residualerna uppvisar inte heller några starka systematiska mönster över olika nivåer av fitted values, vilket tyder på att antagandet om konstant varians i huvudsak är uppfyllt.
+
+Detta stöds även av Breusch–Pagan-testet, som inte är statistiskt signifikant (p = 0.076), vilket innebär att nollhypotesen om homoskedasticitet inte kan förkastas.
+
+
+```{r}
+plot_qq_model(model_2, title = "Q-Q-plot för modell 2")
+```
+
+Q-Q-plottet visar ett liknande mönster som i modell 1, där residualerna följer normalfördelningen relativt väl i mitten men avviker i svansarna. Detta tyder på att tillägget av nya prediktorer inte i någon större utsträckning förbättrar residualernas normalitet.
+
+Sammantaget innebär modell 2 en tydlig förbättring jämfört med grundmodellen, framför allt genom ökad förklaringsgrad och minskad residualspridning, även om vissa begränsningar kvarstår i att fånga extrema värden.
+
+Avvikelserna i residualernas svansar är i linje med den tidigare observerade snedfördelningen i kostnadsvariabeln. För att förbättra modellantagandena testas därför en log-transformerad modell.
+
+
+## 5.4 Modell 3: log-transformerad modell
+
+Eftersom försäkringskostnaderna tidigare visats vara högerskev fördelade testas en modell med log-transformerad responsvariabel. Syftet är att undersöka om detta kan förbättra modellens anpassning samt bättre uppfylla modellantaganden, såsom normalfördelade residualer och konstant varians.
+
+```{r}
 summary(model_3)
+```
+Den log-transformerade modellen visar att samtliga prediktorer är statistiskt signifikanta (p < 0.001). Koefficienterna kan tolkas som approximativa procentuella förändringar i kostnader, vilket innebär att variablernas effekter nu uttrycks relativt snarare än i absoluta termer.
 
-Eftersom kostnadsvariabeln var tydligt snedfördelad testades även en modell med log-transformerad responsvariabel. Syftet var att undersöka om denna modell gav en bättre anpassning och mer rimliga modellantaganden.
+Förklaringsgraden uppgår till cirka 61 procent. Även om detta är lägre än i modell 2 är värdena inte direkt jämförbara, eftersom modellerna använder olika skalor på responsvariabeln. Den log-transformerade modellen bör därför främst utvärderas utifrån hur väl den uppfyller modellantagandena.
 
-## 5.5 Jämförelse mellan modeller
+**Diagnostik modell 3**
+```{r}
+plot_residuals_grouped(
+  model_3,
+  insurance_cost,
+  color_var = smoker,
+  title = "Residualplot för modell 3"
+)
 
-## 5.6 Modellbedömning 
+bptest(model_3)
+```
+Residualanalysen visar att residualerna är centrerade kring noll, men att spridningen varierar systematiskt över nivåer av fitted values. Spridningen är större vid lägre värden och minskar vid högre, vilket tyder på heteroskedasticitet. För att undersöka antagandet om konstant varians genomfördes ett Breusch–Pagan-test. Testet är statistiskt signifikant (p < 0.001), vilket ger starkt stöd för förekomst av heteroskedasticitet i modellen.
+
+```{r}
+plot_qq_model(model_3, title = "Q-Q-plot för modell 3")
+```
+
+Q-Q-plottet visar att residualerna ligger närmare den teoretiska linjen jämfört med tidigare modeller, särskilt i mitten av fördelningen. Avvikelser kvarstår i svansarna, men dessa är mer symmetriska än tidigare, vilket indikerar en förbättrad normalitet.
+
+Sammantaget förbättrar den log-transformerade modellen normalitetsantagandet jämfört med tidigare modeller, men uppvisar samtidigt tydlig heteroskedasticitet. Detta står i kontrast till modell 2, där variansantagandet i högre grad var uppfyllt. Valet av modell innebär därmed en avvägning mellan förbättrad normalitet och försämrad variansstruktur.
+
+
+## 5.5 Modell 4: Slutlig modell
+
+Som slutlig modell väljs den log-transformerade modellen med interaktion mellan ålder och rökstatus. Syftet är att fånga att effekten av ålder på försäkringskostnader kan skilja sig mellan rökare och icke-rökare.
+
+En interaktion mellan BMI och rökstatus testades men visade sig inte vara statistiskt signifikant. Detta indikerar att sambandet mellan BMI och kostnader inte skiljer sig mellan rökare och icke-rökare, och interaktionen exkluderades därför från den slutliga modellen.
+
+Även om den deskriptiva analysen antyder visuella skillnader mellan grupperna, visar regressionsanalysen att dessa inte kvarstår när hänsyn tas till övriga variabler. Detta tyder på att de observerade skillnaderna i EDA till viss del kan förklaras av andra faktorer.
+
+```{r}
+summary(model_final)
+```
+Den slutliga modellen visar att samtliga prediktorer är statistiskt signifikanta (p < 0.01). Eftersom modellen är log-transformerad kan koefficienterna tolkas som approximativa procentuella förändringar i kostnader. Rökstatus har en stark effekt, där rökare har avsevärt högre kostnader än icke-rökare.
+
+Interaktionstermen mellan ålder och rökstatus är negativ och statistiskt signifikant, vilket indikerar att ålderns effekt på kostnader skiljer sig mellan grupperna. För icke-rökare ökar kostnaderna med cirka 0.94 procent per år, medan motsvarande ökning för rökare är cirka 0.34 procent per år. Detta innebär att ålder har en svagare påverkan på kostnader för rökare än för icke-rökare. Resultaten tyder på att rökning utgör en dominerande riskfaktor, vilket minskar den relativa betydelsen av ålder för denna grupp. 
+
+Även om skillnaden i lutning mellan grupperna är relativt svår att urskilja visuellt, indikerar regressionsanalysen att sambandet mellan ålder och kostnader skiljer sig statistiskt signifikant mellan rökare och icke-rökare.
+
+Jämfört med modell 3 innebär tillägget av interaktionstermen en mindre förbättring av modellens anpassning, vilket framgår av en något högre förklaringsgrad och en marginellt lägre residual standard error. Interaktionstermen är dock statistiskt signifikant, vilket indikerar att modellen fångar en ytterligare dimension av variationen i data. Förbättringen är samtidigt relativt begränsad, vilket tyder på att modellen i stort sett behåller samma struktur som modell 3, men med en mer nyanserad beskrivning av sambanden.
+
+**Diagnostik för modell 4**
+
+```{r}
+plot_residuals_grouped(
+  model_final,
+  insurance_cost,
+  color_var = smoker,
+  title = "Residualplot för modell 4"
+)
+
+plot_qq_model(model_final, title = "Q-Q-plot för modell 4")
+
+bptest(model_final)
+```
+
+Diagnostiken visar ett liknande mönster som för modell 3, vilket är rimligt då modellerna endast skiljer sig genom en interaktionsterm. Residualplottet visar att spridningen varierar över nivåer av fitted values, vilket tyder på heteroskedasticitet. Detta stöds av Breusch–Pagan-testet, som är statistiskt signifikant (p < 0.001) och därmed ger stöd för att variansantagandet inte är fullt uppfyllt.
+
+Q-Q-plottet visar att residualerna följer normalfördelningen relativt väl i mitten av fördelningen, med kvarvarande avvikelser i svansarna.
+
+Sammantaget innebär modellen en förbättring jämfört med modeller i ursprunglig skala, särskilt genom bättre hantering av snedfördelning och extrema värden. Trots kvarvarande heteroskedasticitet bedöms modellen ge en mer robust och tolkbar beskrivning av sambanden i data.
+
+Valet av slutlig modell innebär därmed en avvägning mellan hög förklaringsgrad och väl uppfyllda modellantaganden. Trots att modell 2 uppvisade högre förklaringsgrad valdes den bort, då dess residualer visade tydliga avvikelser från normalfördelning. Den log-transformerade modellen bedöms därför vara mer lämplig för att analysera försäkringskostnader.
+
+
+# 6. Tolkning och slutsatser
+
+Analysen visar att rökstatus är den faktor som har starkast samband med försäkringskostnader. Även kroniska tillstånd och skadehistorik har tydliga positiva samband med kostnader, medan ålder och BMI bidrar i mindre men fortfarande signifikant utsträckning. Interaktionen mellan ålder och rökstatus visar dessutom att ålderns effekt skiljer sig mellan grupper, där den är svagare för rökare än för icke-rökare.
+
+Sammantaget indikerar resultaten att försäkringskostnader i hög grad påverkas av hälsorelaterade faktorer, såsom BMI och kroniska tillstånd, samt individuella riskfaktorer, där rökning framstår som särskilt betydelsefull. Även tidigare skadehistorik utgör en viktig förklaringsfaktor. Den slutliga modellen ger en relativt stabil och tolkbar beskrivning av dessa samband, där log-transformeringen bidrar till att hantera snedfördelning och extrema värden, även om vissa modellantaganden inte är fullt uppfyllda.
+
+Samtidigt finns begränsningar. Modellen har svårt att fullt ut fånga mycket höga kostnader, vilket framgår av avvikelser i residualernas svansar. Vidare förekommer heteroskedasticitet, vilket innebär att variansen i residualerna inte är konstant. Detta tyder på att modellen inte uppfyller alla antaganden och att ytterligare faktorer kan påverka kostnaderna.
+
+Möjliga förbättringar inkluderar att inkludera fler relevanta variabler, exempelvis socioekonomiska faktorer, samt att undersöka alternativa modelltyper som bättre kan hantera heteroskedasticitet. Det skulle även vara möjligt att utforska fler interaktioner mellan variabler för att ytterligare förfina modellen.
+
+
+# 7 Självreflektion
+
+
 

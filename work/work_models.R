@@ -2,6 +2,8 @@
 model_1 <- lm(charges ~ age + bmi + smoker, data = insurance_cost)
 
 summary(model_1)
+par(mfrow = c(2, 2)) 
+plot(model_1)
 # Median nära 0 villket är bra, modellen är ungefär centrerad.-Residualernas 
 # median är nära noll, vilket indikerar att modellen inte är systematiskt sned.
 #Stora max och min, vissa datapunkter dåligt förklarade, outliers och variation
@@ -132,6 +134,7 @@ ggplot(insurance_cost, aes(x = history, y = charges)) +
 model_2a <- lm(charges ~ age + bmi + smoker + chronic_condition + history,
               data = insurance_cost)
 summary(model_2a)
+plot(model_2a)
 
 model_2b <- lm(charges ~ age + bmi + smoker + chronic_condition + history,
                data = insurance_cost)
@@ -224,6 +227,7 @@ model_3 <- lm(log_charges ~ age + bmi + smoker + chronic_condition + history,
 
 summary(model_3)
 summary(model_2a)
+plot(model_3)
 
 # Residual  
 plot(model_3, which = 1)
@@ -274,6 +278,7 @@ ggplot(qq_data_3, aes(theoretical, sample)) +
 
 plot(model_3, which = 3)
 bptest(model_3)
+bptest(model_2a)
 
 #----------------------------------------------------------------------
 #----------------------------------------------------------------------
@@ -290,6 +295,7 @@ model_4b <- lm(log_charges ~ age * smoker + bmi * smoker +
 
 summary(model_4)
 summary(model_4b)
+plot(model_4b)
 # model 4: bmi:smoker p = 0.859 ingen signifikans
 # model 4b:  age:smoker p=,001 signifikant. bmi:smoker fortfarande inte signifikant
 
@@ -298,6 +304,7 @@ model_final <- lm(log_charges ~ age * smoker + bmi +
                data = insurance_cost)
 
 summary(model_final)
+plot(model_final)
 # smokeryes = 0.925, exp(0.925) ≈ 2.52  Rökare har cirka 150 % högre kostnader
 # age = 0.0094 ≈  0.94 % ökning per år
 # age:smokeryes = -0.006: ålder påverkar mindre för rökare
