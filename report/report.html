@@ -354,8 +354,8 @@ $ history_level     &lt;fct&gt; none, low, none, none, low, none, none, none, lo
 </div>
 <p>Sammantaget indikerar resultaten att ålder, skadehistorik och rökstatus är centrala faktorer för att förklara variationen i försäkringskostnader, medan BMI bidrar med ytterligare men mer begränsad förklaringskraft. Dessa variabler framstår därför som särskilt relevanta att inkludera i den fortsatta regressionsanalysen.</p>
 </section>
-<section id="section" class="level2">
-<h2 class="anchored" data-anchor-id="section">4.3</h2>
+<section id="skillnader-mellan-grupper" class="level2">
+<h2 class="anchored" data-anchor-id="skillnader-mellan-grupper">4.3 Skillnader mellan grupper</h2>
 <p>För att undersöka skillnader i kostnadsnivå mellan olika grupper analyserades kategoriska variabler med hjälp av boxplots. Som stöd för urvalet genomfördes även en inledande jämförelse av skillnader i kostnadsnivå mellan grupper.</p>
 <p>Denna analys indikerade att rökstatus samt tidigare skadehistorik uppvisade de största skillnaderna i kostnader. Även den konstruerade variabeln <code>risk_level</code> visade tydliga skillnader mellan grupper.</p>
 <p>Variabeln <code>chronic_condition</code> uppvisade också relativt tydliga skillnader, men i mindre utsträckning jämfört med rökstatus och skadehistorik. Övriga kategoriska variabler visade däremot mer begränsade skillnader i kostnadsnivå och bedömdes därför vara mindre centrala i den fortsatta analysen.</p>
@@ -375,7 +375,7 @@ $ history_level     &lt;fct&gt; none, low, none, none, low, none, none, none, lo
 </div>
 </div>
 </div>
-<p>Även variabler relaterade till tidigare skadehistorik visar tydliga skillnader. Individer med högre historiknivå uppvisar generellt högre kostnader, vilket tyder på att tidigare olyckor och försäkringsärenden är viktiga indikatorer för framtida kostnader.</p>
+<p>Även tidigare skadehistorik visar tydliga skillnader i kostnader. Individer med högre historiknivå uppvisar generellt högre kostnader, vilket tyder på att tidigare olyckor och försäkringsärenden är viktiga indikatorer för framtida kostnader.</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_charges_by_group</span>(</span>
 <span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>  insurance_cost,</span>
@@ -391,19 +391,42 @@ $ history_level     &lt;fct&gt; none, low, none, none, low, none, none, none, lo
 </div>
 </div>
 </div>
-<p>Sammantaget visar analysen att rökstatus och tidigare skadehistorik är starkt relaterade till försäkringskostnader, medan andra kategoriska variabler bidrar i mindre utsträckning. Resultaten ger därmed ett tydligt underlag för vilka variabler som bör prioriteras i den fortsatta regressionsanalysen.</p>
-<p>Struktur för Del 4</p>
-<p>Gör så här:</p>
-<ol start="4" type="1">
-<li>Beskrivande analys 4.1 Fördelning av kostnader</li>
-</ol>
-<p>(hist + log hist)</p>
-<p>4.2 Samband med numeriska variabler</p>
-<p>(scatterplots)</p>
-<p>4.3 Skillnader mellan grupper</p>
-<p>(boxplot smoker)</p>
-<p>4.4 Sammanfattning av samband</p>
-<p>(korrelationsmatris)</p>
+<p>Sammantaget visar analysen att rökstatus och tidigare skadehistorik är starkt relaterade till försäkringskostnader, medan andra kategoriska variabler bidrar i mindre utsträckning till att förklara variationen i kostnader. Resultaten ger därmed ett tydligt underlag för vilka variabler som bör prioriteras i den fortsatta regressionsanalysen.</p>
+</section>
+<section id="sammanfattning-1" class="level2">
+<h2 class="anchored" data-anchor-id="sammanfattning-1">4.4 Sammanfattning</h2>
+<p>Den beskrivande analysen visar att försäkringskostnader påverkas av flera faktorer, där rökstatus, ålder och tidigare skadehistorik framstår som särskilt betydelsefulla. Resultaten indikerar även att vissa variabler samverkar, vilket motiverar en vidare analys med regressionsmodeller för att kvantifiera dessa samband.</p>
+</section>
+</section>
+<section id="regrissionsanalys" class="level1">
+<h1>5 Regrissionsanalys</h1>
+<section id="val-av-prediktorer" class="level2">
+<h2 class="anchored" data-anchor-id="val-av-prediktorer">5.1 Val av prediktorer</h2>
+<p>Utifrån den beskrivande analysen valdes prediktorer som visade tydliga samband med försäkringskostnader. Särskilt relevanta framstod rökstatus, ålder, BMI och tidigare skadehistorik. Även chronic_condition bedömdes vara rimlig att inkludera, då variabeln visade vissa skillnader i kostnadsnivå mellan grupper.</p>
+<p>Vid modelleringen är det viktigt att undvika att inkludera starkt överlappande variabler samtidigt. Därför bör exempelvis både history och history_level eller både bmi och bmi_category inte användas i samma modell utan tydlig motivering.</p>
+</section>
+<section id="modell-1---grundmodell" class="level2">
+<h2 class="anchored" data-anchor-id="modell-1---grundmodell">5.2 Modell 1 - grundmodell</h2>
+<p>model_1 &lt;- lm(charges ~ age + bmi + smoker, data = insurance_cost) summary(model_1)</p>
+<p>age och bmi var relevanta numeriska variabler smoker var tydligt stark i gruppjämförelserna</p>
+<p>En första modell byggdes med ålder, BMI och rökstatus som prediktorer. Dessa variabler valdes eftersom de i den beskrivande analysen uppvisade tydliga samband med kostnader och samtidigt är enkla att tolka.</p>
+</section>
+<section id="modell-2-utökad-modell" class="level2">
+<h2 class="anchored" data-anchor-id="modell-2-utökad-modell">5.3 Modell 2 – utökad modell</h2>
+<p>model_2 &lt;- lm(charges ~ age + bmi + smoker + chronic_condition + history_level + exercise_level, data = insurance_cost) summary(model_2)</p>
+<p>Alternativt kan du använda history i stället för history_level om du vill behålla den som numerisk.</p>
+<p>För att undersöka om modellen kunde förbättras byggdes även en utökad modell där ytterligare variabler inkluderades. Dessa valdes utifrån tidigare analys och med ambitionen att fånga både hälsorelaterade faktorer och skadehistorik.</p>
+</section>
+<section id="modell-3-log-transformerad-modell" class="level2">
+<h2 class="anchored" data-anchor-id="modell-3-log-transformerad-modell">5.4 Modell 3 log-transformerad modell</h2>
+<p>model_3 &lt;- lm(log_charges ~ age + bmi + smoker + chronic_condition + history_level + exercise_level, data = insurance_cost) summary(model_3)</p>
+<p>Eftersom kostnadsvariabeln var tydligt snedfördelad testades även en modell med log-transformerad responsvariabel. Syftet var att undersöka om denna modell gav en bättre anpassning och mer rimliga modellantaganden.</p>
+</section>
+<section id="jämförelse-mellan-modeller" class="level2">
+<h2 class="anchored" data-anchor-id="jämförelse-mellan-modeller">5.5 Jämförelse mellan modeller</h2>
+</section>
+<section id="modellbedömning" class="level2">
+<h2 class="anchored" data-anchor-id="modellbedömning">5.6 Modellbedömning</h2>
 </section>
 </section>
 

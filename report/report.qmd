@@ -195,4 +195,41 @@ Sammantaget visar analysen att rökstatus och tidigare skadehistorik är starkt 
 Den beskrivande analysen visar att försäkringskostnader påverkas av flera faktorer, där rökstatus, ålder och tidigare skadehistorik framstår som särskilt betydelsefulla. Resultaten indikerar även att vissa variabler samverkar, vilket motiverar en vidare analys med regressionsmodeller för att kvantifiera dessa samband.
 
 
+# 5 Regrissionsanalys
+
+## 5.1 Val av prediktorer
+
+Utifrån den beskrivande analysen valdes prediktorer som visade tydliga samband med försäkringskostnader. Särskilt relevanta framstod rökstatus, ålder, BMI och tidigare skadehistorik. Även chronic_condition bedömdes vara rimlig att inkludera, då variabeln visade vissa skillnader i kostnadsnivå mellan grupper.
+
+Vid modelleringen är det viktigt att undvika att inkludera starkt överlappande variabler samtidigt. Därför bör exempelvis både history och history_level eller både bmi och bmi_category inte användas i samma modell utan tydlig motivering.
+
+## 5.2 Modell 1 - grundmodell
+
+model_1 <- lm(charges ~ age + bmi + smoker, data = insurance_cost)
+summary(model_1)
+
+age och bmi var relevanta numeriska variabler
+smoker var tydligt stark i gruppjämförelserna
+
+En första modell byggdes med ålder, BMI och rökstatus som prediktorer. Dessa variabler valdes eftersom de i den beskrivande analysen uppvisade tydliga samband med kostnader och samtidigt är enkla att tolka.
+
+
+## 5.3 Modell 2 – utökad modell
+
+model_2 <- lm(charges ~ age + bmi + smoker + chronic_condition + history_level + exercise_level, data = insurance_cost)
+summary(model_2)
+
+Alternativt kan du använda history i stället för history_level om du vill behålla den som numerisk.
+
+För att undersöka om modellen kunde förbättras byggdes även en utökad modell där ytterligare variabler inkluderades. Dessa valdes utifrån tidigare analys och med ambitionen att fånga både hälsorelaterade faktorer och skadehistorik.
+
+## 5.4 Modell 3 log-transformerad modell
+model_3 <- lm(log_charges ~ age + bmi + smoker + chronic_condition + history_level + exercise_level, data = insurance_cost)
+summary(model_3)
+
+Eftersom kostnadsvariabeln var tydligt snedfördelad testades även en modell med log-transformerad responsvariabel. Syftet var att undersöka om denna modell gav en bättre anpassning och mer rimliga modellantaganden.
+
+## 5.5 Jämförelse mellan modeller
+
+## 5.6 Modellbedömning 
 
