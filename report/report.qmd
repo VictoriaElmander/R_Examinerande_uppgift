@@ -334,7 +334,7 @@ Interaktionstermen mellan ålder och rökstatus är negativ och statistiskt sign
 
 Jämfört med modell 3 innebär tillägget av interaktionstermen en mindre förbättring av modellens anpassning, vilket framgår av en något högre förklaringsgrad och en marginellt lägre residual standard error. Interaktionstermen är dock statistiskt signifikant, vilket indikerar att modellen fångar en ytterligare dimension av variationen i data. Förbättringen är samtidigt relativt begränsad, vilket tyder på att modellen i stort sett behåller samma struktur som modell 3, men med en mer nyanserad beskrivning av sambanden.
 
-**Diagnostik för modell 4**
+**Diagnostik modell 4**
 
 ```{r}
 plot_residuals_grouped(
