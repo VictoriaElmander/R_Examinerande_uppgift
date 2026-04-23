@@ -152,7 +152,7 @@ Som komplement användes en korrelationsmatris för att ge en samlad bild av sam
 plot_correlation_matrix(insurance_cost)
 ```
 
-Sammantaget indikerar resultaten att ålder, skadehistorik och rökstatus är centrala faktorer för att förklara variationen i försäkringskostnader, medan BMI bidrar med ytterligare men mer begränsad förklaringskraft. Dessa variabler framstår därför som särskilt relevanta att inkludera i den fortsatta regressionsanalysen.
+Sammantaget indikerar resultaten att ålder, skadehistorik och rökstatus är centrala faktorer för att förklara variationen i försäkringskostnader, medan BMI också uppvisar ett positivt men något svagare samband. Dessa variabler framstår därför som relevanta att inkludera i den fortsatta regressionsanalysen.
 
 
 ## 4.3 Skillnader mellan grupper
@@ -191,16 +191,16 @@ Sammantaget visar analysen att rökstatus och tidigare skadehistorik är starkt 
 
 ## 4.4 Sammanfattning
 
-Den beskrivande analysen visar att försäkringskostnader påverkas av flera faktorer, där rökstatus, ålder och tidigare skadehistorik framstår som särskilt betydelsefulla. Resultaten indikerar även att vissa variabler samverkar, vilket motiverar en vidare analys med regressionsmodeller för att kvantifiera dessa samband.
+Den beskrivande analysen visar att försäkringskostnader påverkas av flera faktorer, där rökstatus, ålder och tidigare skadehistorik framstår som särskilt betydelsefulla. Även BMI visar ett positivt samband med kostnader, men i mindre utsträckning. Resultaten indikerar även att vissa variabler samverkar, vilket motiverar en vidare analys med regressionsmodeller för att kvantifiera dessa samband.
 
 
-# 5. Regrissionsanalys
+# 5. Regressionsanalys
 
 ## 5.1 Val av prediktorer
 
-Utifrån den beskrivande analysen valdes prediktorer som visade tydliga samband med försäkringskostnader. Särskilt relevanta variabler var `age`, `bmi` och `smoker`, då dessa uppvisade tydliga mönster i både scatterplots och gruppjämförelser.
+Utifrån den beskrivande analysen identifierades flera variabler med tydliga samband med försäkringskostnader. Särskilt starka samband observerades för `smoker`, `age`, `chronic_condition` och tidigare skadehistorik (`history`). Variabeln `bmi` visade ett svagare men konsekvent positivt samband och inkluderades därför som ett kompletterande mått i analysen.
 
-För att förbättra modellens förklaringskraft inkluderades även `chronic_condition` och `history`, eftersom dessa variabler fångar individers hälsotillstånd och tidigare skadehistorik, vilka båda visade samband med kostnader.
+Dessa variabler valdes för att representera centrala aspekter av individens hälsa, livsstil och skadehistorik, vilka samtliga bedöms vara relevanta för att förklara variationen i försäkringskostnader.
 
 Vid modelleringen är det viktigt att undvika att inkludera variabler som överlappar varandra informationsmässigt. Därför användes den numeriska variabeln `history` istället för den kategoriserade varianten `history_level`, då den ger mer detaljerad information och uppvisar ett ungefär linjärt samband med kostnader. Generellt eftersträvades att undvika redundanta variabler i modellen, för att förbättra både tolkbarhet och modellens stabilitet.
 
@@ -374,6 +374,8 @@ Möjliga förbättringar inkluderar att inkludera fler relevanta variabler, exem
 Jag bedömer att jag har genomfört uppgiften på ett strukturerat sätt genom att utveckla och jämföra flera regressionsmodeller samt tolka resultaten på ett tydligt och systematiskt sätt. Särskilt arbetet med att utvärdera modellantaganden och motivera valet av slutlig modell har fungerat väl.
 
 Den största utmaningen var att tolka modellernas diagnostik, framför allt att förstå skillnaden mellan visuella mönster i den deskriptiva analysen och statistiska resultat från regressionsmodellerna.
+
+Under arbetets gång användes även en separat arbetsyta för att testa olika lösningar och modeller. Detta innebar viss upprepning och mindre strukturerad kod i ett tidigt skede. I den slutliga versionen har koden organiserats mer systematiskt, bland annat genom att använda funktioner för återkommande moment, vilket förbättrat både struktur och läsbarhet.
 
 Jag anser att min inlämning motsvarar VG, då jag har uppfyllt kraven på en fördjupad analys genom att jämföra olika modellval, motivera mitt val av slutlig modell samt kritiskt diskutera modellernas styrkor och begränsningar.
 

@@ -312,3 +312,44 @@ plot(model_final)
 # Slutsats: Rökare, redan höga kostnader. ålder mindre relevant
 # Icke rökare, ålder driver kostnader mer. 
 
+# 
+par(mfrow = c(2, 2))
+plot(model_3)
+
+# predicterad vs faktiska
+
+insurance_cost$pred_1 <- fitted(model_1)
+insurance_cost$pred_2 <- fitted(model_2)
+
+insurance_cost$pred_3 <- exp(fitted(model_3))
+insurance_cost$pred_final <- exp(fitted(model_final))
+
+ggplot(insurance_cost, aes(x = charges, y = predicted)) +
+  geom_point(alpha = 0.5) +
+  geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "red") +
+  theme_minimal() +
+  labs(
+    title = "Predikterade vs faktiska kostnader",
+    x = "Faktiska kostnader",
+    y = "Predikterade kostnader"
+  )
+
+plot_data <- insurance_cost %>%
+  select(charges, pred_1, pred_2, pred_3, pred_final) %>%
+  pivot_longer(
+    cols = starts_with("pred"),
+    names_to = "model",
+    values_to = "predicted"
+  )
+
+ggplot(plot_data, aes(x = charges, y = predicted)) +
+  geom_point(alpha = 0.3) +
+  geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "red") +
+  facet_wrap(~model, scales = "free") +
+  theme_minimal() +
+  labs(
+    title = "Predikterade vs faktiska värden för alla modeller",
+    x = "Faktiska kostnader",
+    y = "Predikterade kostnader"
+  )
+
