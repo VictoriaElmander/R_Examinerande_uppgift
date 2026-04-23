@@ -1,6 +1,7 @@
 library(tidyverse)
 library(patchwork)
 library(lmtest)
+library(here)
 
 insurance_cost_raw <- read_csv(
   here("data", "insurance_costs.csv"),
