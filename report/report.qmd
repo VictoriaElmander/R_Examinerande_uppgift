@@ -5,10 +5,9 @@ editor: visual
 ---
 
 ```{r echo=FALSE, results='hide', message=FALSE, warning=FALSE}
-source("../scripts/01_load_data.R")
-source("../scripts/02_prepare_data.R")
-source("../scripts/03_functions.R")
-source("../scripts/04_models.R")
+library(here)
+
+source(here("run_analysis.R"))
 ```
 
 # 1. Inledning
@@ -372,6 +371,10 @@ Möjliga förbättringar inkluderar att inkludera fler relevanta variabler, exem
 
 
 # 7 Självreflektion
+Jag bedömer att jag har genomfört uppgiften på ett strukturerat sätt genom att utveckla och jämföra flera regressionsmodeller samt tolka resultaten på ett tydligt och systematiskt sätt. Särskilt arbetet med att utvärdera modellantaganden och motivera valet av slutlig modell har fungerat väl.
 
+Den största utmaningen var att tolka modellernas diagnostik, framför allt att förstå skillnaden mellan visuella mönster i den deskriptiva analysen och statistiska resultat från regressionsmodellerna.
+
+Jag anser att min inlämning motsvarar VG, då jag har uppfyllt kraven på en fördjupad analys genom att jämföra olika modellval, motivera mitt val av slutlig modell samt kritiskt diskutera modellernas styrkor och begränsningar.
 
 

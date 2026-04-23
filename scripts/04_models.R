@@ -51,6 +51,5 @@ plot_qq_model <- function(model, title = NULL) {
     )
 }
 
-par(mfrow = c(2, 2))
-plot(model_3)
+
 
